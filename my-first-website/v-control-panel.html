@@ -735,19 +735,54 @@
     <!-- السكريبت الموحد والشامل -->
     <script src="script.js"></script>
     <script>
-    // 🔒 حماية اللوحة وتسجيل الدخول
-    (function checkAuth() {
+        // 🔒 نظام الحماية والتحقق المزدوج (OTP)
+    (function(){
+        emailjs.init("yExz_CExz6OhNVfcH");
+    })();
+
+    async function checkAuth() {
         const isAdminLoggedIn = sessionStorage.getItem("admin_logged_in");
-        if (!isAdminLoggedIn) {
-            const password = prompt("🔐 لوحة محمية - يرجى إدخال كلمة مرور الإدارة:");
-            if (password === "admin123") {
-                sessionStorage.setItem("admin_logged_in", "true");
-            } else {
-                alert("كلمة المرور خاطئة!");
+        
+        if (isAdminLoggedIn === "true") {
+            return;
+        }
+
+        const password = prompt("🔐 المرحلة 1/2: يرجى إدخال كلمة مرور الإدارة:");
+        
+        if (password === "admin123") {
+            const generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+            alert("كلمة المرور صحيحة! جاري إرسال رمز التحقق (OTP) إلى بريدك الإلكتروني...");
+
+            try {
+                await emailjs.send('service_koanmrt', 'template_c06wum6', {
+                    email: "zakidey888@gmail.com",
+                    passcode: generatedOTP
+                });
+
+                const userOTP = prompt("📩 المرحلة 2/2: أدخل رمز التحقق (OTP) المرسل إلى إيميلك:");
+
+                if (userOTP === generatedOTP) {
+                    alert("✅ تم التحقق بنجاح! مرحباً بك في لوحة التحكم.");
+                    sessionStorage.setItem("admin_logged_in", "true");
+                } else {
+                    alert("❌ رمز التحقق غير صحيح! تم رفض الدخول.");
+                    window.location.href = "index.html";
+                }
+
+            } catch (error) {
+                console.error("EmailJS Error:", error);
+                alert("حدث خطأ أثناء إرسال الرمز. تأكد من إعدادات البريد والاتصال.");
                 window.location.href = "index.html";
             }
+
+        } else {
+            alert("❌ كلمة المرور غير صحيحة!");
+            window.location.href = "index.html";
         }
-    })();
+    }
+
+    // تشغيل التحقق فوراً
+    checkAuth();
 
     function logoutAdmin() {
         sessionStorage.removeItem("admin_logged_in");
@@ -786,6 +821,7 @@
         document.getElementById(tabId).classList.add('active');
         btn.classList.add('active');
     }
+
 
     async function loadTripCards() {
         const container = document.getElementById('tripsContainer');
