@@ -1,0 +1,400 @@
+/* =========================================================
+   1. التنسيقات العامة والأساسية (Global & Reset)
+   ========================================================= */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #0d1b2a;
+    background-image: url('style.png.jpeg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+    color: #ffffff;
+    padding: 0;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+a {
+    color: #d4af37;
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+/* =========================================================
+   2. شريط التنقل العلوي (Navbar)
+   ========================================================= */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(13, 27, 42, 0.75);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    padding: 15px 30px;
+    margin: 20px 30px;
+    border-radius: 20px;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    position: sticky;
+    top: 15px;
+    z-index: 100;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.nav-logo {
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 25px;
+}
+
+.nav-links a {
+    color: #ffffff;
+    font-size: 15px;
+    padding-bottom: 5px;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+    color: #d4af37;
+    border-bottom: 2px solid #d4af37;
+}
+
+.nav-info {
+    text-align: right;
+}
+
+.nav-title {
+    color: #d4af37;
+    font-size: 20px;
+    margin: 0;
+}
+
+.marquee-container {
+    overflow: hidden;
+    white-space: nowrap;
+    width: 200px;
+}
+
+.marquee-text {
+    display: inline-block;
+    font-size: 13px;
+    color: #bb8e2c;
+    animation: scroll-text 10s linear infinite;
+}
+
+@keyframes scroll-text {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
+
+/* =========================================================
+   3. قسم الهيرو والتخطيط الرئيسي (Hero & Layout)
+   ========================================================= */
+.hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 40px 50px;
+    gap: 40px;
+    max-width: 1300px;
+    margin: 0 auto;
+}
+
+.hero-image {
+    flex: 1;
+    min-width: 300px;
+    max-width: 600px;
+}
+
+.hero-image img {
+    width: 100%;
+    height: auto;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.side-bar-left {
+    background: rgba(13, 27, 42, 0.75);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 30px;
+    width: 380px;
+    max-width: 100%;
+    border-radius: 25px;
+    border: 1px solid rgba(212, 175, 55, 0.4);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    text-align: right;
+}
+
+.brand-tag {
+    color: #d4af37;
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.divider {
+    width: 50px;
+    height: 2px;
+    background-color: #d4af37;
+}
+
+.hero-title {
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: bold;
+    line-height: 1.4;
+}
+
+.hero-title .highlight {
+    color: #d4af37;
+}
+
+.hero-desc {
+    color: #dddddd;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.hero-buttons-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.glass-btn {
+    background-color: #d4af37;
+    color: #0d1b2a;
+    padding: 12px 20px;
+    border-radius: 25px;
+    font-weight: bold;
+    font-size: 15px;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.glass-btn:hover {
+    background-color: #e5be48;
+    transform: translateY(-2px);
+}
+
+/* =========================================================
+   4. قسم خيارات الخدمات والبطاقات (Cards & Options)
+   ========================================================= */
+.options-section {
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.cards-container {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 25px;
+    flex-wrap: wrap;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.option-card {
+    background: rgba(13, 27, 42, 0.75);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    border-radius: 20px;
+    padding: 30px 20px;
+    width: 300px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    transition: all 0.35s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.option-card:hover {
+    transform: translateY(-8px);
+    border-color: #d4af37;
+    box-shadow: 0 12px 30px rgba(212, 175, 55, 0.3);
+}
+
+.card-icon {
+    font-size: 40px;
+    margin-bottom: 15px;
+}
+
+.card-title {
+    color: #d4af37;
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.card-desc {
+    color: #cccccc;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* =========================================================
+   5. القوائم المنسدلة وأزرار التواصل والتغييرات الفردية
+   ========================================================= */
+.hidden {
+    display: none !important;
+}
+
+.social-links-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.social-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    color: #fff;
+    font-size: 14px;
+}
+
+.social-btn:hover {
+    background: rgba(212, 175, 55, 0.2);
+}
+
+/* زر اختيار اللغة */
+.lang-switcher {
+    position: relative;
+}
+
+.lang-icon-btn {
+    background: rgba(212, 175, 55, 0.15);
+    border: 1px solid rgba(212, 175, 55, 0.4);
+    color: #d4af37;
+    font-size: 18px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.lang-menu {
+    position: absolute;
+    top: 45px;
+    left: 0;
+    background: rgba(13, 27, 42, 0.95);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    border-radius: 12px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 140px;
+    z-index: 1000;
+}
+
+.lang-option {
+    background: none;
+    border: none;
+    color: white;
+    text-align: right;
+    padding: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    border-radius: 6px;
+}
+
+.lang-option:hover {
+    background: rgba(212, 175, 55, 0.2);
+}
+
+/* =========================================================
+   6. التجاوب مع الهواتف والشاشات الصغيرة (Responsive)
+   ========================================================= */
+@media (max-width: 850px) {
+    .navbar {
+        flex-direction: column;
+        gap: 15px;
+        margin: 10px;
+        padding: 15px;
+    }
+
+    .hero {
+        flex-direction: column-reverse;
+        padding: 20px;
+    }
+
+    .side-bar-left {
+        width: 100%;
+    }
+
+    .cards-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .option-card {
+        width: 100%;
+        max-width: 350px;
+    }
+}
+.contact-hidden {
+    display: none;
+}
+
+.contact-toggle-btn {
+    background: #d4af37;
+    color: #0b1321;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 20px auto;
+    display: block;
+    transition: background 0.3s;
+}
+
+.contact-toggle-btn:hover {
+    background: #f1c40f;
+}
+.nav-contact-btn {
+    background: #d4af37;
+    color: #0b1321 !important;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.nav-contact-btn:hover {
+    background: #f1c40f;
+    color: #0b1321 !important;
+}

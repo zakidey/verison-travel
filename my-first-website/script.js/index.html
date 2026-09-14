@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VERISON TRAVEL</title>
+    
+    <!-- PWA Configuration -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0056b3">
+
+    <!-- 🔒 سياسة أمان المحتوى لتصريح الاتصال بـ Supabase وباقي الخدمات -->
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src *;">
+
+    <!-- استدعاء ملف التنسيقات (CSS) -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- مكتبة الأيقونات Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- تحميل مكتبة Supabase عبر CDN وملف الإعدادات الموحد -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabaseClient.js"></script>
+    <script src="translations.js"></script>
+
+</head>
+<body>
+
+    <!-- شريط التنقل العلوي (Navbar) -->
+    <nav class="navbar">
+        <div class="nav-logo">VERISON <span style="color: #d4af37;">TRAVEL</span></div>
+        
+        <ul class="nav-links">
+            <li><a href="index.html" class="active" data-key="home">الرئيسية</a></li>
+            <li><a href="rihlat.html" data-key="destinations">الوجهات</a></li>
+            <li><a href="booking.html" data-key="offers">عروضنا</a></li>
+            <li><a href="#about" data-key="about">من نحن</a></li>
+            <li><a href="#contact" class="nav-contact-btn" data-key="contact" onclick="openAgencyInfoModal()">اتصل بنا</a></li>
+        </ul>
+
+        <!-- زر تغيير اللغة متناسق مع style.css -->
+        <div class="lang-switcher">
+            <button id="langBtn" class="lang-icon-btn" onclick="toggleLanguage()">AR</button>
+        </div>
+    </nav>
+
+    <!-- قسم Hero الرئيسي -->
+    <section class="hero">
+        <div class="side-bar-left">
+            <span class="brand-tag">VERISON TRAVEL</span>
+            <div class="divider"></div>
+            <h1 class="hero-title" data-key="hero_title">اكتشف رحلات <span class="highlight">فاخرة</span></h1>
+            <p class="hero-desc" data-key="hero_desc">وكالة سياحية متخصصة في تقديم رحلات فاخرة وتجارب سفر فريدة</p>
+            
+            <div class="hero-buttons-group">
+                <a href="booking.html" class="glass-btn" data-key="btn_book">احجز هنا</a>
+                <a href="rihlat.html" class="glass-btn" data-key="btn_trips">شاهد رحلاتنا</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- استدعاء السكريبت الرئيسي -->
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الحجوزات - Verison Travel</title>
+    
+    <!-- 1. مكتبة Supabase الرسمية -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- 2. ملف الاتصال الموحد بـ Supabase (ضروري جداً) -->
+    <script src="supabaseClient.js"></script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #0d1b2a;
+            min-height: 100vh;
+            color: #fff;
+        }
+        .topbar {
+            background: rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(212,175,55,0.3);
+            padding: 18px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .logo { font-weight: bold; font-size: 20px; }
+        .logo span { color: #d4af37; }
+        .topbar-actions { display: flex; gap: 12px; align-items: center; }
+        .back-link { color: #ccc; text-decoration: none; font-size: 14px; }
+        .back-link:hover { color: #d4af37; }
+        .logout-btn {
+            background: transparent;
+            border: 1px solid #d4af37;
+            color: #d4af37;
+            padding: 8px 18px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .logout-btn:hover { background: #d4af37; color: #0d1b2a; }
+
+        .container { padding: 25px 30px; }
+
+        .stats {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(212,175,55,0.3);
+            border-radius: 12px;
+            padding: 15px 25px;
+            text-align: center;
+            min-width: 130px;
+        }
+        .stat-card .num { font-size: 26px; font-weight: bold; color: #d4af37; }
+        .stat-card .label { font-size: 13px; color: #ccc; margin-top: 4px; }
+
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .toolbar input, .toolbar select {
+            background: rgba(15,23,42,0.8);
+            border: 1px solid rgba(212,175,55,0.3);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px 14px;
+            text-align: right;
+            font-size: 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        th {
+            background: rgba(212,175,55,0.15);
+            color: #d4af37;
+        }
+        .status-select {
+            padding: 5px 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(212,175,55,0.4);
+            background: #0f172a;
+            color: #fff;
+            font-size: 13px;
+        }
+        .empty-msg {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="topbar">
+        <div class="logo">VERISON <span>TRAVEL</span> — إدارة الحجوزات</div>
+        <div class="topbar-actions">
+            <a href="dashboard.html" class="back-link">← رجوع للوحة التحكم</a>
+            <button class="logout-btn" id="logoutBtn">تسجيل الخروج</button>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- بطاقات الإحصائيات -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="num" id="totalCount">0</div>
+                <div class="label">إجمالي الحجوزات</div>
+            </div>
+            <div class="stat-card">
+                <div class="num" id="pendingCount">0</div>
+                <div class="label">قيد الانتظار</div>
+            </div>
+            <div class="stat-card">
+                <div class="num" id="confirmedCount">0</div>
+                <div class="label">مؤكدة</div>
+            </div>
+            <div class="stat-card">
+                <div class="num" id="cancelledCount">0</div>
+                <div class="label">ملغاة</div>
+            </div>
+        </div>
+
+        <!-- أشرطة البحث والفلترة -->
+        <div class="toolbar">
+            <input type="text" id="searchInput" placeholder="بحث باسم العميل أو الهاتف..." onkeyup="filterBookings()">
+            <select id="typeFilter" onchange="filterBookings()">
+                <option value="all">كل أنواع الحجز</option>
+                <option value="hotel">حجز فندق</option>
+                <option value="flight">حجز طيران</option>
+                <option value="package">باقة متكاملة</option>
+            </select>
+            <select id="statusFilter" onchange="filterBookings()">
+                <option value="all">جميع الحالات</option>
+                <option value="جديد">جديد</option>
+                <option value="مؤكد">مؤكد</option>
+                <option value="ملغى">ملغى</option>
+            </select>
+        </div>
+
+        <!-- جدول عرض الحجوزات -->
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>الاسم الكامل</th>
+                        <th>رقم الهاتف</th>
+                        <th>نوع الحجز</th>
+                        <th>الصيغة</th>
+                        <th>السعر</th>
+                        <th>التاريخ</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody id="bookingsTableBody">
+                    <tr>
+                        <td colspan="7" class="empty-msg">جاري تحميل الحجوزات...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        let allBookings = [];
+
+        function getClient() {
+            return window.supabaseClient || window.supabase || null;
+        }
+
+        document.addEventListener("DOMContentLoaded", async function() {
+            const client = getClient();
+            if (!client) {
+                console.error("تعذر العثور على Supabase");
+                document.getElementById("bookingsTableBody").innerHTML = `<tr><td colspan="7" class="empty-msg">تعذر الاتصال بقاعدة البيانات</td></tr>`;
+                return;
+            }
+
+            // التحقق من تسجيل الدخول
+            try {
+                const { data: { user } } = await client.auth.getUser();
+                if (!user) {
+                    window.location.href = "login.html";
+                    return;
+                }
+            } catch (e) {
+                console.warn("تعذر التحقق من تسجيل الدخول:", e);
+            }
+
+            // زر تسجيل الخروج
+            document.getElementById("logoutBtn").addEventListener("click", async function() {
+                const client = getClient();
+                if (client && client.auth) {
+                    await client.auth.signOut();
+                }
+                window.location.href = "login.html";
+            });
+
+            // جلب البيانات
+            loadBookings();
+        });
+
+        async function loadBookings() {
+            const client = getClient();
+            if (!client) return;
+
+            const { data, error } = await client
+                .from('bookings')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error("خطأ أثناء جلب البيانات:", error);
+                document.getElementById("bookingsTableBody").innerHTML = `<tr><td colspan="7" class="empty-msg">حدث خطأ في تحميل البيانات</td></tr>`;
+                return;
+            }
+
+            allBookings = data || [];
+            updateStats();
+            renderTable(allBookings);
+        }
+
+        function updateStats() {
+            document.getElementById("totalCount").textContent = allBookings.length;
+            document.getElementById("pendingCount").textContent = allBookings.filter(b => b.status === 'جديد' || !b.status).length;
+            document.getElementById("confirmedCount").textContent = allBookings.filter(b => b.status === 'مؤكد').length;
+            document.getElementById("cancelledCount").textContent = allBookings.filter(b => b.status === 'ملغى').length;
+        }
+
+        function renderTable(bookings) {
+            const tbody = document.getElementById("bookingsTableBody");
+            if (bookings.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="empty-msg">لا توجد حجوزات مطابقة</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = bookings.map(b => `
+                <tr>
+                    <td>${b.fullname || b.name || '-'}</td>
+                    <td>${b.phone || '-'}</td>
+                    <td>${getServiceTypeName(b.booking_type || b.trip)}</td>
+                    <td>${b.formule || '-'}</td>
+                    <td>${b.total_price ? b.total_price + ' د.ج' : '-'}</td>
+                    <td>${b.created_at ? new Date(b.created_at).toLocaleDateString('ar-DZ') : '-'}</td>
+                    <td>
+                        <select class="status-select" onchange="updateBookingStatus('${b.id}', this.value)">
+                            <option value="جديد" ${b.status === 'جديد' || !b.status ? 'selected' : ''}>جديد</option>
+                            <option value="مؤكد" ${b.status === 'مؤكد' ? 'selected' : ''}>مؤكد</option>
+                            <option value="ملغى" ${b.status === 'ملغى' ? 'selected' : ''}>ملغى</option>
+                        </select>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getServiceTypeName(type) {
+            if (type === 'hotel') return '🏨 فندق';
+            if (type === 'flight') return '✈️ طيران';
+            if (type === 'package') return '📦 باقة';
+            return type || '-';
+        }
+
+        function filterBookings() {
+            const query = document.getElementById("searchInput").value.toLowerCase();
+            const typeVal = document.getElementById("typeFilter").value;
+            const statusVal = document.getElementById("statusFilter").value;
+
+            const filtered = allBookings.filter(b => {
+                const name = (b.fullname || b.name || '').toLowerCase();
+                const phone = b.phone || '';
+                const matchesSearch = name.includes(query) || phone.includes(query);
+                const matchesType = typeVal === 'all' || b.booking_type === typeVal;
+                const matchesStatus = statusVal === 'all' || b.status === statusVal;
+
+                return matchesSearch && matchesType && matchesStatus;
+            });
+
+            renderTable(filtered);
+        }
+
+        async function updateBookingStatus(id, newStatus) {
+            const client = getClient();
+            if (!client) return;
+
+            const { error } = await client
+                .from('bookings')
+                .update({ status: newStatus })
+                .eq('id', id);
+
+            if (error) {
+                alert("حدث خطأ أثناء تحديث الحالة");
+            } else {
+                const booking = allBookings.find(b => b.id === id);
+                if (booking) booking.status = newStatus;
+                updateStats();
+            }
+        }
+    </script>
+
+</body>
+</html>

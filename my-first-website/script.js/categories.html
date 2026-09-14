@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختر خدمتك - Verison Travel</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- مكتبة Supabase الرسمية -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        .back-btn-container {
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .back-btn {
+            background: rgba(212, 175, 55, 0.15);
+            border: 1px solid #d4af37;
+            color: #d4af37;
+            padding: 10px 22px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #d4af37;
+            color: #0d1b2a;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-logo">VERISON <span style="color: #d4af37;">TRAVEL</span></div>
+        <div class="nav-info">
+            <h1 class="nav-title">✨ اختر خدمتك</h1>
+            <div class="marquee-container">
+                <p class="nav-subtitle marquee-text">اكتشف باقاتنا المصممة خصيصًا لتجربة سفر لا تُنسى</p>
+            </div>
+        </div>
+    </nav>
+
+    <section class="options-section">
+        <!-- 1. البطاقات الثلاث الرئيسية -->
+        <div id="main-cards" class="cards-container">
+            <!-- بطاقة حجز فندق -->
+            <div class="option-card" onclick="openSubOptions('hotel')" style="cursor: pointer;">
+                <div class="card-icon">🏨</div>
+                <h2 class="card-title">حجز فندق</h2>
+                <p class="card-desc">أفخم الفنادق في أرقى الوجهات السياحية حول العالم</p>
+            </div>
+
+            <!-- بطاقة حجز طيران -->
+            <div class="option-card" onclick="openSubOptions('flight')" style="cursor: pointer;">
+                <div class="card-icon">✈️</div>
+                <h2 class="card-title">حجز طيران</h2>
+                <p class="card-desc">رحلات طيران مريحة وسريعة إلى وجهتك المفضلة</p>
+            </div>
+
+            <!-- بطاقة باقة متكاملة -->
+            <div class="option-card" onclick="openSubOptions('package')" style="cursor: pointer;">
+                <div class="card-icon">📦</div>
+                <h2 class="card-title">باقة متكاملة</h2>
+                <p class="card-desc">فندق وطيران وجولات سياحية في باقة واحدة فاخرة</p>
+            </div>
+        </div>
+
+        <!-- 2. الخيارات الفرعية (تظهر عند اختيار خدمة) -->
+        <div id="sub-options" class="cards-container hidden">
+            <div class="back-btn-container" style="width: 100%;">
+                <button type="button" class="back-btn" onclick="showMainCards()">← العودة للخدمات الرئيسية</button>
+            </div>
+
+            <!-- البطاقة الأولى: الرحلات والعروض المتاحة -->
+            <a id="offers-link" href="rihlat.html" class="option-card">
+                <div class="card-icon">🏷️</div>
+                <h2 class="card-title">العروض المتاحة</h2>
+                <p class="card-desc">تصفح كافة الرحلات والعروض المتوفرة حالياً لهذه الخدمة</p>
+            </a>
+
+            <!-- البطاقة الثانية: تعبئة استمارة الحجز -->
+            <a id="form-link" href="form.html" class="option-card">
+                <div class="card-icon">📝</div>
+                <h2 class="card-title">تعبئة استمارة الحجز</h2>
+                <p class="card-desc">قم بتعبئة معلوماتك لتأكيد الطلب والتواصل معك</p>
+            </a>
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+    <script>
+        function openSubOptions(serviceType) {
+            document.getElementById("main-cards").classList.add("hidden");
+            document.getElementById("sub-options").classList.remove("hidden");
+
+            // توجيه الروابط وتمرير نوع الخدمة في الـ URL
+            document.getElementById("offers-link").href = `rihlat.html?type=${serviceType}`;
+            document.getElementById("form-link").href = `form.html?type=${serviceType}`;
+        }
+
+        function showMainCards() {
+            document.getElementById("sub-options").classList.add("hidden");
+            document.getElementById("main-cards").classList.remove("hidden");
+        }
+    </script>
+</body>
+</html>

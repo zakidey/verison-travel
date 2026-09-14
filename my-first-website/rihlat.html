@@ -1,0 +1,443 @@
+<html lang="ar" dir="rtl" class="notranslate">
+<head>
+    <meta name="google" content="notranslate">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>استكشف رحلاتنا - Verison Travel</title>
+    <meta name="theme-color" content="#d4af37">
+
+    <!-- 1. مكتبة Supabase الرسمية -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- 2. ملف الاتصال الموحد وملف الترجمة -->
+    <script src="supabaseClient.js"></script>
+    <script src="translations.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #0b1321;
+            --card-bg: #132238;
+            --gold: #d4af37;
+            --gold-hover: #f1c40f;
+            --text-white: #ffffff;
+            --text-muted: #a0aec0;
+            --border-color: rgba(212, 175, 55, 0.25);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-white);
+            margin: 0;
+            padding: 0;
+            direction: rtl;
+        }
+
+        /* الهيدر العلوي */
+        .navbar {
+            background: var(--card-bg);
+            padding: 18px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .brand-logo {
+            font-size: 22px;
+            font-weight: bold;
+            color: var(--gold);
+            text-decoration: none;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-back {
+            background: transparent;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        .btn-back:hover {
+            background: var(--gold);
+            color: var(--bg-dark);
+        }
+
+        /* زر اللغة */
+        .lang-icon-btn {
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 7px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .lang-icon-btn:hover {
+            background: var(--gold);
+            color: var(--bg-dark);
+        }
+
+        /* الحاوية الرئيسية */
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .page-title {
+            text-align: center;
+            color: var(--gold);
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .page-subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            font-size: 15px;
+        }
+
+        /* أزرار الفلترة */
+        .filter-container {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: var(--card-bg);
+            color: var(--text-white);
+            border: 1px solid var(--border-color);
+            padding: 10px 22px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--gold);
+            color: var(--bg-dark);
+            border-color: var(--gold);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+        }
+
+        /* شبكة عرض البطاقات */
+        .trips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 30px;
+        }
+
+        .trip-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .trip-card:hover {
+            transform: translateY(-7px);
+            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.15);
+        }
+
+        .trip-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .trip-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .trip-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .trip-title {
+            font-size: 20px;
+            color: var(--gold);
+            margin: 0;
+            font-weight: bold;
+        }
+
+        .trip-price {
+            background: rgba(212, 175, 55, 0.15);
+            color: var(--gold);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            border: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        .trip-desc {
+            color: var(--text-muted);
+            font-size: 13.5px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            flex-grow: 1;
+        }
+
+        .trip-details {
+            font-size: 13px;
+            color: #d1d5db;
+            margin-bottom: 15px;
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .trip-details div {
+            margin-bottom: 5px;
+        }
+
+        .trip-details div:last-child {
+            margin-bottom: 0;
+        }
+
+        .features-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 20px;
+        }
+
+        .feature-tag {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-book {
+            background: var(--gold);
+            color: var(--bg-dark);
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: background 0.3s;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .btn-book:hover {
+            background: var(--gold-hover);
+        }
+
+        /* رسائل الحالة */
+        .status-msg {
+            text-align: center;
+            grid-column: 1 / -1;
+            padding: 50px;
+            color: var(--text-muted);
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+   <nav class="navbar">
+    <a href="index.html" class="brand-logo">VERISON TRAVEL</a>
+    
+    <div class="nav-actions">
+        <button id="langBtn" class="lang-icon-btn" onclick="toggleLanguage()">AR</button>
+        <a href="index.html" class="btn-back" data-i18n="navHome">⬅ العودة للرئيسية</a>
+    </div>
+</nav>
+
+
+    <main class="container">
+        <h1 class="page-title" data-i18n="exploreTitle">استكشف العروض والرحلات المميزة</h1>
+        <p class="page-subtitle" data-i18n="exploreSubtitle">اختر وجهتك القادمة واحجز بكل سهولة مع Verison Travel</p>
+
+        <!-- أزرار الفلترة -->
+        <div class="filter-container">
+            <button class="filter-btn active" data-category="all" onclick="filterTrips('all', this)" data-i18n="allOffers">🌐 جميع العروض</button>
+            <button class="filter-btn" data-category="hotel" onclick="filterTrips('hotel', this)" data-i18n="hotelsFilter">🏨 حجوزات الفنادق</button>
+            <button class="filter-btn" data-category="flight" onclick="filterTrips('flight', this)" data-i18n="flightsFilter">✈️ حجوزات الطيران</button>
+            <button class="filter-btn" data-category="package" onclick="filterTrips('package', this)" data-i18n="packagesFilter">📦 الباقات المتكاملة</button>
+        </div>
+
+        <!-- معرض البطاقات -->
+        <div class="trips-grid" id="tripsGrid">
+            <div class="status-msg" data-i18n="loading">جاري تحميل الرحلات...</div>
+        </div>
+    </main>
+
+    <script>
+        let allTripsData = []; // تخزين الرحلات المحملة لتصفيتها بدون إعادة الاتصال
+        window.currentCategory = 'all';
+
+        function getClient() {
+            return window.supabaseClient || window.supabase || null;
+        }
+
+        // عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const categoryParam = urlParams.get('type') || 'all';
+            window.currentCategory = categoryParam;
+
+            const activeBtn = document.querySelector(`.filter-btn[data-category="${categoryParam}"]`) || document.querySelector(`.filter-btn[data-category="all"]`);
+            if (activeBtn) {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                activeBtn.classList.add('active');
+            }
+
+            // جلب البيانات مع محاولات إعادة الاتصال
+            let attempts = 0;
+            const checkAndFetch = () => {
+                const client = getClient();
+                if (client) {
+                    fetchTripsFromSupabase(categoryParam);
+                } else if (attempts < 10) {
+                    attempts++;
+                    setTimeout(checkAndFetch, 200);
+                } else {
+                    document.getElementById('tripsGrid').innerHTML = '<div class="status-msg" style="color:#e74c3c;">خطأ: تعذر الاتصال بقاعدة البيانات Supabase.</div>';
+                }
+            };
+            checkAndFetch();
+        });
+
+        // جلب البيانات من Supabase
+        async function fetchTripsFromSupabase(initialCategory) {
+            const grid = document.getElementById('tripsGrid');
+            const client = getClient();
+
+            if (!client) {
+                grid.innerHTML = '<div class="status-msg" style="color:#e74c3c;">خطأ: تعذر الاتصال بقاعدة البيانات.</div>';
+                return;
+            }
+
+            try {
+                const { data: trips, error } = await client
+                    .from('trips')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (!trips || trips.length === 0) {
+                    const currentLang = typeof getCurrentLang === "function" ? getCurrentLang() : 'ar';
+                    const noDataText = (window.translations && window.translations[currentLang] && window.translations[currentLang].noData) 
+                        ? window.translations[currentLang].noData 
+                        : 'لا توجد رحلات أو عروض مضافة حالياً.';
+                    grid.innerHTML = `<div class="status-msg">${noDataText}</div>`;
+                    return;
+                }
+
+                allTripsData = trips;
+                window.allTripsData = trips;
+                renderTrips(initialCategory);
+
+            } catch (err) {
+                console.error('Fetch Error:', err);
+                grid.innerHTML = `<div class="status-msg" style="color:#e74c3c;">حدث خطأ أثناء جلب البيانات: ${err.message || 'مشكلة في الاتصال'}</div>`;
+            }
+        }
+
+        // عرض بطاقات الرحلات بعد الفلترة
+        function renderTrips(category) {
+            const grid = document.getElementById('tripsGrid');
+            window.currentCategory = category;
+            
+            const filteredTrips = category === 'all' 
+                ? allTripsData 
+                : allTripsData.filter(t => t.category === category || t.booking_type === category);
+
+            const currentLang = typeof getCurrentLang === "function" ? getCurrentLang() : 'ar';
+            const t = (window.translations && window.translations[currentLang]) ? window.translations[currentLang] : {};
+
+            if (filteredTrips.length === 0) {
+                grid.innerHTML = `<div class="status-msg">${t.noData || 'لا توجد عروض متاحة في هذه الفئة حالياً.'}</div>`;
+                return;
+            }
+
+            grid.innerHTML = '';
+            filteredTrips.forEach(trip => {
+                const featuresHtml = trip.features 
+                    ? trip.features.split(',').map(f => `<span class="feature-tag">✔ ${f.trim()}</span>`).join('') 
+                    : '';
+
+                const card = document.createElement('div');
+                card.className = 'trip-card';
+                card.innerHTML = `
+                    <img class="trip-img" src="${trip.image_url || 'https://via.placeholder.com/400x200?text=VERISON+TRAVEL'}" alt="${trip.title}">
+                    <div class="trip-content">
+                        <div class="trip-header">
+                            <h3 class="trip-title">${trip.title}</h3>
+                            <div class="trip-price">${trip.price ? trip.price + ' ' + (t.currency || 'د.ج') : (t.statusNew || 'حسب الطلب')}</div>
+                        </div>
+                        
+                        <p class="trip-desc">${trip.description || ''}</p>
+
+                        <div class="trip-details">
+                            ${trip.trip_date ? `<div>📅 <strong>${t.colDate || 'التاريخ'}:</strong> ${trip.trip_date}</div>` : ''}
+                            ${trip.total_seats ? `<div>🪑 <strong>المقاعد المتاحة:</strong> ${trip.total_seats}</div>` : ''}
+                        </div>
+                        ${featuresHtml ? `<div class="features-list">${featuresHtml}</div>` : ''}
+
+                        <div style="display: flex; gap: 10px; margin-top: auto;">
+                            <a href="trip-details.html?trip_id=${trip.id}" class="btn-book" style="background: transparent; color: var(--gold); border: 1px solid var(--gold); flex: 1; text-align: center;">
+                                ${t.btnDetails || '🔍 التفاصيل'}
+                            </a>
+                            <a href="booking.html?trip_id=${trip.id}&title=${encodeURIComponent(trip.title)}" class="btn-book" style="flex: 1; text-align: center;">
+                                ${t.btnBookNow || 'احجز الآن ✈️'}
+                            </a>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // دالة الفلترة عند الضغط على الأزرار
+        function filterTrips(category, btnElement) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+
+            const newUrl = window.location.pathname + (category === 'all' ? '' : `?type=${category}`);
+            window.history.pushState({ path: newUrl }, '', newUrl);
+
+            renderTrips(category);
+        }
+    </script>
+</body>
+</html>

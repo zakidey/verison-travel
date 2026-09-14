@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رحلاتنا المتوفرة - Verison Travel</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .showcase-page {
+            padding: 30px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .showcase-title {
+            color: #d4af37;
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 30px;
+        }
+        .showcase-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+        }
+        .trip-card {
+            background: rgba(13, 27, 42, 0.85);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            border-radius: 15px;
+            overflow: hidden;
+            text-decoration: none;
+            display: block;
+            transition: 0.25s;
+        }
+        .trip-card:hover {
+            transform: translateY(-3px);
+            border-color: #d4af37;
+        }
+        .trip-card img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+        }
+        .trip-card-body {
+            padding: 15px;
+        }
+        .trip-card-title {
+            color: #d4af37;
+            font-size: 17px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .trip-card-price {
+            color: #ccc;
+            font-size: 14px;
+        }
+        .loading-trips { color: #ccc; text-align: center; padding: 40px; grid-column: 1 / -1; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-logo">VERISON <span style="color: #d4af37;">TRAVEL</span></div>
+        <ul class="nav-links">
+            <li><a href="index.html" data-key="home">الرئيسية</a></li>
+            <li><a href="rihlat.html" data-key="destinations">الوجهات</a></li>
+            <li><a href="booking.html" data-key="offers">عروضنا</a></li>
+        </ul>
+    </nav>
+
+    <div class="showcase-page">
+        <h1 class="showcase-title">🏖️ رحلاتنا المتوفرة</h1>
+        <p style="text-align:center; color:#aaa; font-size:13px; margin-top:-20px; margin-bottom:25px;">اضغط على أي رحلة لمشاهدة التفاصيل الكاملة</p>
+        <div class="showcase-grid" id="showcaseGrid">
+            <p class="loading-trips">جاري تحميل الرحلات...</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        async function loadShowcaseTrips() {
+            const grid = document.getElementById('showcaseGrid');
+            if (!supabaseClient) {
+                grid.innerHTML = '<p class="loading-trips">تعذر الاتصال بقاعدة البيانات.</p>';
+                return;
+            }
+
+            const { data: trips, error } = await supabaseClient.from('trips').select('*');
+
+            if (error || !trips || trips.length === 0) {
+                grid.innerHTML = '<p class="loading-trips">لا توجد رحلات متاحة حالياً.</p>';
+                return;
+            }
+
+            grid.innerHTML = '';
+            trips.forEach(function(trip) {
+                const card = document.createElement('a');
+                card.className = 'trip-card';
+                card.href = 'trip-details.html?id=' + trip.id;
+                card.innerHTML =
+                    '<img src="' + (trip.image_url || 'trip.png.png') + '" alt="' + trip.title + '">' +
+                    '<div class="trip-card-body">' +
+                        '<div class="trip-card-title">' + trip.title + '</div>' +
+                        '<div class="trip-card-price">' + (trip.price || 'السعر عند الطلب') + '</div>' +
+                    '</div>';
+                grid.appendChild(card);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', loadShowcaseTrips);
+    </script>
+
+</body>
+</html>

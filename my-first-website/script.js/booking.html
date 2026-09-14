@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="notranslate">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google" content="notranslate">
+    <title>اختر خدمتك - Verison Travel</title>
+    <!-- PWA Configuration -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0056b3">
+
+    <!-- 1. استدعاء ملف التنسيقات (CSS) -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- 2. مكتبة الأيقونات Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- 3. ملف الترجمة الموحد -->
+    <script src="translations.js"></script>
+
+    <!-- 4. ربط مكتبة Supabase الموحدة -->
+   <script type="module">
+  import { supabase } from './supabaseClient.js';
+  window.supabase = supabase;
+
+  async function loadBookingCards() {
+    const { data: cards, error } = await supabase
+      .from('booking_cards')
+      .select('*');
+
+    if (error || !cards || !cards.length) {
+      console.warn('تعذر تحميل بطاقات الحجز من قاعدة البيانات، سيتم استخدام القيم الافتراضية.');
+      return;
+    }
+
+    cards.forEach(card => {
+      const iconEl = document.getElementById(`card_icon_${card.card_key}`);
+      const titleEl = document.getElementById(`card_title_${card.card_key}`);
+      const descEl = document.getElementById(`card_desc_${card.card_key}`);
+
+      if (iconEl && card.icon_class) {
+        // إذا icon_class عبارة عن كلاس Font Awesome بدل إيموجي
+        iconEl.innerHTML = `<i class="${card.icon_class}"></i>`;
+      }
+      if (titleEl && card.title_ar) {
+        titleEl.textContent = card.title_ar;
+      }
+      if (descEl && card.description_ar) {
+        descEl.textContent = card.description_ar;
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', loadBookingCards);
+</script>
+    <style>
+        /* تنسيق زر اللغة */
+        .lang-icon-btn {
+            background: transparent;
+            border: 1px solid #d4af37;
+            color: #d4af37;
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .lang-icon-btn:hover {
+            background: #d4af37;
+            color: #0b1321;
+        }
+
+        /* تنسيقات الأزرار الفرعية داخل البطاقة */
+        .sub-options {
+            display: none;
+            margin-top: 18px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(212, 175, 55, 0.3);
+            gap: 10px;
+            flex-direction: column;
+        }
+
+        .sub-btn {
+            display: block;
+            padding: 10px 12px;
+            background: rgba(212, 175, 55, 0.15);
+            border: 1px solid #d4af37;
+            color: #ffffff;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .sub-btn:hover {
+            background: #d4af37;
+            color: #0d1b2a;
+        }
+
+        /* إظهار الخيارات عند تفعيل البطاقة */
+        .option-card.active-card .sub-options {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-logo">VERISON <span style="color: #d4af37;">TRAVEL</span></div>
+        <div class="nav-info">
+            <h1 class="nav-title" data-i18n="offers">✨ اختر خدمتك</h1>
+            <div class="marquee-container">
+                <p class="nav-subtitle marquee-text" data-i18n="exploreSubtitle">اكتشف باقاتنا المصممة خصيصًا لتجربة سفر لا تُنسى</p>
+            </div>
+        </div>
+        <div class="nav-actions">
+            <button id="langBtn" class="lang-icon-btn" onclick="toggleLanguage()">AR</button>
+        </div>
+    </nav>
+
+    <section class="options-section">
+        <div class="cards-container" id="bookingCardsContainer">
+            <!-- بطاقة حجز فندق (Card 1) -->
+            <div class="option-card" onclick="toggleCard(this)" style="cursor: pointer;" data-card-key="hotel">
+                <div class="card-icon" id="card_icon_hotel">🏨</div>
+                <h2 class="card-title" id="card_title_hotel" data-i18n="hotelType">حجز فندق</h2>
+                <p class="card-desc" id="card_desc_hotel" data-i18n="hotelsFilter">أفخم الفنادق في أرقى الوجهات السياحية حول العالم</p>
+                
+                <div class="sub-options">
+                    <a href="rihlat.html?type=hotel" class="sub-btn" onclick="event.stopPropagation()" data-i18n="navTrips">🏷️ الرحلات المتوفرة</a>
+                    <a href="form.html?type=hotel" class="sub-btn" onclick="event.stopPropagation()" data-i18n="btnBookNow">📝 استمارة الحجز</a>
+                </div>
+            </div>
+
+            <!-- بطاقة حجز طيران (Card 2) -->
+            <div class="option-card" onclick="toggleCard(this)" style="cursor: pointer;" data-card-key="flight">
+                <div class="card-icon" id="card_icon_flight">✈️</div>
+                <h2 class="card-title" id="card_title_flight" data-i18n="flightType">حجز طيران</h2>
+                <p class="card-desc" id="card_desc_flight" data-i18n="flightsFilter">رحلات طيران مريحة وسريعة إلى وجهتك المفضلة</p>
+                
+                <div class="sub-options">
+                    <a href="rihlat.html?type=flight" class="sub-btn" onclick="event.stopPropagation()" data-i18n="navTrips">🏷️ الرحلات المتوفرة</a>
+                    <a href="form.html?type=flight" class="sub-btn" onclick="event.stopPropagation()" data-i18n="btnBookNow">📝 استمارة الحجز</a>
+                </div>
+            </div>
+
+            <!-- بطاقة باقة متكاملة (Card 3) -->
+            <div class="option-card" onclick="toggleCard(this)" style="cursor: pointer;" data-card-key="package">
+                <div class="card-icon" id="card_icon_package">📦</div>
+                <h2 class="card-title" id="card_title_package" data-i18n="packageType">باقة متكاملة</h2>
+                <p class="card-desc" id="card_desc_package" data-i18n="packagesFilter">فندق وطيران وجولات سياحية في باقة واحدة فاخرة</p>
+                
+                <div class="sub-options">
+                    <a href="rihlat.html?type=package" class="sub-btn" onclick="event.stopPropagation()" data-i18n="navTrips">🏷️ الرحلات المتوفرة</a>
+                    <a href="form.html?type=package" class="sub-btn" onclick="event.stopPropagation()" data-i18n="btnBookNow">📝 استمارة الحجز</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- استدعاء script.js كـ module -->
+    <script type="module" src="script.js"></script>
+    <script>
+        function toggleCard(cardElement) {
+            const isActive = cardElement.classList.contains("active-card");
+            
+            // إغلاق أي بطاقة أخرى مفتوحة
+            document.querySelectorAll(".option-card").forEach(c => c.classList.remove("active-card"));
+            
+            // تبديل حالة البطاقة المحددة
+            if (!isActive) {
+                cardElement.classList.add("active-card");
+            }
+        }
+    </script>
+</body>
+</html>

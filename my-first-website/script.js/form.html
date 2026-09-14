@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="notranslate">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google" content="notranslate">
+    <title>نموذج الحجز - Verison Travel</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- مكتبة الترجمة الموحدة -->
+    <script src="translations.js"></script>
+
+    <!-- مكتبة Supabase الرسمية -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /* تنسيق زر اللغة */
+        .nav-actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .lang-icon-btn {
+            background: transparent;
+            border: 1px solid #d4af37;
+            color: #d4af37;
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .lang-icon-btn:hover {
+            background: #d4af37;
+            color: #0b1321;
+        }
+
+        /* تحسينات وتنسيقات خاصة بالفورم الاحترافي */
+        .booking-container {
+            max-width: 550px;
+            margin: 40px auto;
+            padding: 35px 30px;
+            background: rgba(13, 27, 42, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        }
+
+        .booking-title {
+            color: #d4af37;
+            text-align: center;
+            font-size: 26px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .booking-subtitle {
+            color: #cccccc;
+            text-align: center;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #d4af37;
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 15px;
+            outline: none;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: #d4af37;
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #d4af37, #aa8214);
+            color: #0d1b2a;
+            border: none;
+            padding: 15px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
+            background: linear-gradient(135deg, #e5be48, #c3981d);
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #cccccc;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: #d4af37;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-logo">VERISON <span style="color: #d4af37;">TRAVEL</span></div>
+        <div class="nav-info">
+            <h1 class="nav-title" data-i18n="formTitle">✨ استمارة الحجز</h1>
+        </div>
+        <div class="nav-actions">
+            <button id="langBtn" class="lang-icon-btn" onclick="toggleLanguage()">AR</button>
+        </div>
+    </nav>
+
+    <div class="booking-container">
+        <h2 class="booking-title" data-i18n="formHeading">احجز رحلتك الآن</h2>
+        <p class="booking-subtitle" data-i18n="formSubheading">يرجى ملء البيانات التالية وسيتم التواصل معك لتأكيد الحجز</p>
+
+        <form id="bookingForm">
+            <div class="form-group">
+                <label for="name" data-i18n="labelFullName">👤 الاسم الكامل</label>
+                <input type="text" id="name" class="form-control" placeholder="أدخل اسمك الكامل" data-i18n-placeholder="phName" required>
+            </div>
+
+            <div class="form-group">
+                <label for="phone" data-i18n="labelPhone">📞 رقم الهاتف / واتساب</label>
+                <input type="tel" id="phone" class="form-control" placeholder="06XXXXXXXX" data-i18n-placeholder="phPhone" required>
+            </div>
+
+            <div class="form-group">
+                <label for="trip" data-i18n="labelDestination">✈️ الوجهة / الرحلة</label>
+                <select id="trip" class="form-control" required>
+                    <option value="" disabled selected data-i18n="selectDestination">اختر الوجهة المفضلة</option>
+                    <option value="تونس" data-i18n="destTunisia">🇹🇳 تونس</option>
+                    <option value="دبي" data-i18n="destDubai">🇦🇪 دبي</option>
+                    <option value="اسطنبول" data-i18n="destIstanbul">🇹🇷 اسطنبول</option>
+                    <option value="عمرة" data-i18n="destOmra">🇸🇦 العمرة الشريفة</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="date" data-i18n="labelTravelDate">📅 تاريخ السفر</label>
+                    <input type="date" id="date" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="people" data-i18n="labelPassengers">👥 عدد المسافرين</label>
+                    <input type="number" id="people" class="form-control" min="1" value="1" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="notes" data-i18n="labelNotes">📝 ملاحظات أو طلبات خاصة (اختياري)</label>
+                <textarea id="notes" class="form-control" rows="3" placeholder="هل لديك أي تفضيلات خاصة بالطيران أو الفندق؟" data-i18n-placeholder="phNotes"></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn" data-i18n="btnSubmitForm">تأكيد وإرسال الطلب ✨</button>
+        </form>
+
+        <a href="booking.html" class="back-link" data-i18n="backToServices">← العودة إلى قائمة الخدمات</a>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.getElementById("bookingForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById("submitBtn");
+            submitBtn.disabled = true;
+            
+            // جلب النص المترجم لزر الإرسال
+            const currentLang = localStorage.getItem("selectedLang") || "ar";
+            if (currentLang === "fr") {
+                submitBtn.textContent = "Envoi en cours...";
+            } else if (currentLang === "en") {
+                submitBtn.textContent = "Sending...";
+            } else {
+                submitBtn.textContent = "جاري إرسال الطلب...";
+            }
+
+            const payload = {
+                name: document.getElementById("name").value,
+                phone: document.getElementById("phone").value,
+                trip: document.getElementById("trip").value,
+                date: document.getElementById("date").value,
+                people: parseInt(document.getElementById("people").value) || 1,
+                notes: document.getElementById("notes").value,
+                status: 'قيد الانتظار'
+            };
+
+            if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+                const { data, error } = await supabaseClient
+                    .from('bookings')
+                    .insert([payload]);
+
+                if (error) {
+                    const errMsg = currentLang === "fr" ? "Erreur lors de l'envoi: " : currentLang === "en" ? "Error submitting booking: " : "حدث خطأ أثناء إرسال الحجز: ";
+                    alert(errMsg + error.message);
+                    console.error("Supabase Error:", error);
+                } else {
+                    const successMsg = currentLang === "fr" ? "Réservation envoyée avec succès !" : currentLang === "en" ? "Booking submitted successfully!" : "تم إرسال حجزك بنجاح! سيتم التواصل معك في أقرب وقت.";
+                    alert(successMsg);
+                    document.getElementById("bookingForm").reset();
+                }
+            } else {
+                alert("تعذر الاتصال بقاعدة البيانات. يرجى التأكد من إعدادات script.js");
+            }
+
+            submitBtn.disabled = false;
+            // إعادة نص الزر حسب اللغة
+            if (typeof updatePageLanguage === 'function') {
+                updatePageLanguage();
+            } else {
+                submitBtn.textContent = "تأكيد وإرسال الطلب ✨";
+            }
+        });
+    </script>
+</body>
+</html>

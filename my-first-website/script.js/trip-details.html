@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تفاصيل الرحلة - Verison Travel</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabaseClient.js"></script>
+    <style>
+        .details-page {
+            padding: 30px 20px 110px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .details-image {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            border-radius: 15px;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+        }
+        .details-title {
+            color: #d4af37;
+            font-size: 26px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .details-price {
+            color: #fff;
+            background: rgba(212, 175, 55, 0.15);
+            display: inline-block;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 15px;
+            margin-top: 10px;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+        }
+        .details-date {
+            color: #aaa;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .details-description {
+            color: #ddd;
+            font-size: 15px;
+            line-height: 1.8;
+            margin-top: 20px;
+            white-space: pre-line;
+        }
+        .details-loading { color: #ccc; text-align: center; padding: 60px; }
+        .back-link {
+            display: inline-block;
+            color: #aaa;
+            text-decoration: none;
+            font-size: 13px;
+            margin-top: 20px;
+        }
+        .back-link:hover { color: #d4af37; }
+
+        .features-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .features-table caption {
+            text-align: right;
+            color: #d4af37;
+            font-weight: bold;
+            font-size: 15px;
+            margin-bottom: 10px;
+        }
+        .features-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            color: #ddd;
+            font-size: 14px;
+        }
+        .features-table td.check-col {
+            color: #2ecc71;
+            font-weight: bold;
+            width: 40px;
+            text-align: center;
+        }
+        .features-table tr:last-child td { border-bottom: none; }
+
+        .floating-book-btn {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #d4af37, #aa8214);
+            color: #0d1b2a;
+            border: none;
+            padding: 16px 30px;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 50;
+            animation: pulse-btn 1.6s infinite;
+        }
+        @keyframes pulse-btn {
+            0%   { box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5); }
+            50%  { box-shadow: 0 8px 35px rgba(212, 175, 55, 0.9); }
+            100% { box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5); }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-logo">VERISON <span style="color: #d4af37;">TRAVEL</span></div>
+        <ul class="nav-links">
+            <li><a href="index.html" data-key="home">الرئيسية</a></li>
+            <li><a href="rihlat.html" data-key="destinations">الوجهات</a></li>
+            <li><a href="booking.html" data-key="offers">عروضنا</a></li>
+        </ul>
+    </nav>
+
+    <div class="details-page" id="detailsContainer">
+        <p class="details-loading">جاري تحميل التفاصيل...</p>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        let currentTrip = null;
+
+        function getTripIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('trip_id') || params.get('id');
+        }
+
+        async function loadTripDetails() {
+            const container = document.getElementById('detailsContainer');
+            const tripId = getTripIdFromUrl();
+            if (!tripId || !window.supabaseClient) {
+                container.innerHTML = '<p class="details-loading">تعذر تحميل تفاصيل الرحلة.</p>';
+                return;
+            }
+
+            const { data: trip, error } = await supabaseClient
+                .from('trips')
+                .select('*')
+                .eq('id', tripId)
+                .single();
+
+            if (error || !trip) {
+                container.innerHTML = '<p class="details-loading">لم يتم العثور على هذه الرحلة.</p>';
+                return;
+            }
+
+            currentTrip = trip;
+
+            let featuresHtml = '';
+            if (trip.features) {
+                const rows = trip.features.split(',').map(function(f) {
+                    return '<tr><td class="check-col">✔</td><td>' + f.trim() + '</td></tr>';
+                }).join('');
+                featuresHtml =
+                    '<table class="features-table">' +
+                        '<caption>مواصفات الرحلة</caption>' +
+                        '<tbody>' + rows + '</tbody>' +
+                    '</table>';
+            }
+
+            container.innerHTML =
+                '<img class="details-image" src="' + (trip.image_url || 'trip.png.png') + '" alt="' + trip.title + '">' +
+                '<div class="details-title">' + trip.title + '</div>' +
+                '<div><span class="details-price">' + (trip.price || 'السعر عند الطلب') + '</span></div>' +
+                (trip.trip_date ? '<div class="details-date">📅 تاريخ الرحلة: ' + trip.trip_date + '</div>' : '') +
+                '<div class="details-description">' + (trip.description || 'لا يوجد وصف متاح لهذه الرحلة حالياً.') + '</div>' +
+                featuresHtml +
+                '<a href="trips-showcase.html" class="back-link">← العودة لكل الرحلات</a>';
+
+            const floatingBtn = document.getElementById('floatingBookBtn');
+            floatingBtn.style.display = 'flex';
+        }
+
+        document.addEventListener('DOMContentLoaded', loadTripDetails);
+    </script>
+
+    <a href="#" id="floatingBookBtn" class="floating-book-btn" style="display:none;">
+        <span>✈️</span>
+        <span>احجز الآن</span>
+    </a>
+
+    <script>
+        document.getElementById('floatingBookBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            if (!currentTrip) return;
+            window.location.href = 'form.html?trip=' + encodeURIComponent(currentTrip.title) + '&type=' + (currentTrip.category || '');
+        });
+    </script>
+
+</body>
+</html>

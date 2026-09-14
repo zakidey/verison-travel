@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - Verison Travel</title>
+
+    <!-- 🔒 سياسة أمان المحتوى لتصريح الاتصال بـ Supabase وباقي الخدمات -->
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src *;">
+
+    <!-- وسوم التهيئة ومظهر PWA -->
+    <meta name="theme-color" content="#d4af37">
+
+    <!-- تحميل مكتبة Supabase وملف الإعدادات -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabaseClient.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #0b1321;
+            --card-bg: #132238;
+            --gold: #d4af37;
+            --gold-hover: #f1c40f;
+            --text-white: #ffffff;
+            --text-muted: #a0aec0;
+            --border-color: rgba(212, 175, 55, 0.25);
+            --danger: #e74c3c;
+            --success: #2ecc71;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-white);
+            margin: 0;
+            direction: rtl;
+        }
+
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        .top-navbar {
+            background: var(--card-bg);
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 90;
+        }
+
+        .menu-toggle {
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--gold);
+            background: none;
+            border: none;
+        }
+
+        .brand-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--gold);
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-exit, .btn-logout {
+            color: #fff;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+
+        .btn-exit { background: #34495e; }
+        .btn-logout { background: var(--danger); }
+        .btn-exit:hover, .btn-logout:hover { opacity: 0.85; }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -320px;
+            width: 300px;
+            height: 100%;
+            background: var(--card-bg);
+            box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+            transition: right 0.3s ease;
+            z-index: 1000;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        .sidebar.active {
+            right: 0;
+        }
+
+        .close-sidebar {
+            background: none;
+            border: none;
+            color: var(--danger);
+            font-size: 20px;
+            float: left;
+            cursor: pointer;
+        }
+
+        .sidebar-section {
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.03);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .sidebar-section h4 {
+            color: var(--gold);
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+        }
+
+        .sidebar-item {
+            margin-bottom: 10px;
+            font-size: 13px;
+            background: rgba(0,0,0,0.2);
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        .sidebar-item label {
+            display: block;
+            color: var(--text-muted);
+            margin-bottom: 3px;
+            font-size: 11px;
+        }
+
+        .sidebar-item input, .sidebar-item select {
+            width: 100%;
+            background: #0b1321;
+            color: #fff;
+            border: 1px solid var(--border-color);
+            padding: 6px;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .container {
+            padding: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            color: var(--gold);
+            margin-bottom: 25px;
+            font-size: 22px;
+            border-right: 4px solid var(--gold);
+            padding-right: 10px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .trip-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+        }
+
+        .trip-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.2);
+        }
+
+        .trip-card img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            cursor: pointer;
+        }
+
+        .trip-card-body {
+            padding: 15px;
+            cursor: pointer;
+        }
+
+        .trip-card-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--gold);
+        }
+
+        .trip-card-info {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .trip-card-actions {
+            padding: 10px 15px;
+            background: rgba(0,0,0,0.15);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btn-delete-trip {
+            background: var(--danger);
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .modal-overlay, .modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-overlay.active, .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 950px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 25px;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            left: 20px;
+            top: 15px;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .tabs-header {
+            display: flex;
+            gap: 10px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn, .action-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 10px 18px;
+            font-size: 15px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+
+        .action-btn {
+            background: rgba(212, 175, 55, 0.1);
+            color: var(--gold);
+            border-radius: 6px;
+            font-weight: bold;
+        }
+
+        .tab-btn.active {
+            color: var(--gold);
+            border-bottom-color: var(--gold);
+            font-weight: bold;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            text-align: center;
+            font-size: 14px;
+        }
+
+        th {
+            color: var(--gold);
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .btn-whatsapp {
+            background: #25D366;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 13px;
+        }
+
+        .btn-whatsapp:hover {
+            background: #20ba5a;
+        }
+
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-confirmed { background: rgba(46, 204, 113, 0.2); color: var(--success); }
+        .status-pending { background: rgba(241, 196, 15, 0.2); color: var(--gold-hover); }
+        .status-rejected { background: rgba(231, 76, 60, 0.2); color: var(--danger); }
+
+        /* --- تنسيقات النوافذ والجداول الشاملة --- */
+        .modal-lg { max-width: 1000px !important; }
+        .buttons-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
+        .nav-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 15px; color: #fff; cursor: pointer; text-align: right; transition: transform 0.2s, border-color 0.2s; display: flex; align-items: center; gap: 12px; }
+        .nav-card:hover { transform: translateY(-3px); border-color: var(--gold); }
+        .card-icon { font-size: 28px; }
+        .card-info h3 { margin: 0 0 5px 0; font-size: 15px; color: var(--gold); }
+        .card-info p { margin: 0; font-size: 11px; color: var(--text-muted); }
+        .table-top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+        .btn-back { background: #34495e; color: #fff; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; }
+        .sub-modal { z-index: 2500 !important; }
+        .form-group { margin-bottom: 12px; text-align: right; }
+        .form-group label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; background: #0b1321; color: #fff; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; box-sizing: border-box; font-size: 13px; }
+        .form-row { display: flex; gap: 10px; }
+        .read-only-input { background: rgba(255,255,255,0.05) !important; border-color: rgba(255,255,255,0.1) !important; }
+        .modal-actions-grid { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-save-pay { flex: 1; background: var(--gold); color: #0b1321; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-whatsapp-pay { flex: 1; background: #25D366; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-danger-confirm { width: 100%; background: var(--danger); color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    </style>
+</head>
+<body>
+     <header class="top-navbar">
+        <button class="menu-toggle" onclick="toggleSidebar()" aria-label="القائمة">☰</button>
+        <div class="brand-title" data-key="admin_title">VERISON TRAVEL - لوحة الإدارة</div>
+        <div class="nav-actions">
+            <button id="adminLangBtn" class="btn-exit" onclick="toggleAdminLanguage()">AR</button>
+            <a href="index.html" class="btn-exit">⬅ الموقع</a>
+            <button onclick="logoutAdmin()" class="btn-logout">خروج 🔒</button>
+        </div>
+    </header>
+    
+    <!-- الشريط الجانبي -->
+    <aside class="sidebar" id="sidebar">
+        <button class="close-sidebar" onclick="toggleSidebar()" aria-label="إغلاق">✕</button>
+        <h3 style="color: var(--gold); margin-top: 25px; font-size: 16px;" data-key="admin_dashboard">⚙️ لوحة التحكم والإعدادات</h3>
+        <hr style="border-color: var(--border-color);">
+
+        <!-- 1. التحكم في العروض والبطاقات -->
+        <div class="sidebar-section">
+            <h4 data-key="admin_trips">1. إعدادات البطاقات والعروض</h4>
+            <div id="sidebarTripsConfig">
+                <p style="font-size:12px; color:#a0aec0;">جاري تحميل العروض...</p>
+            </div>
+        </div>
+
+        <!-- 2. التحكم في بطاقات صفحة الحجز -->
+        <div class="sidebar-section">
+            <h4>2. بطاقات صفحة الحجز (Booking Cards)</h4>
+            <div id="bookingCardsAdminConfig">
+                <p style="font-size:12px; color:#a0aec0;">جاري تحميل بطاقات الخدمات...</p>
+            </div>
+        </div>
+
+        <!-- 3. زر اللغة -->
+        <div class="sidebar-section">
+            <h4>3. اللغة (Language)</h4>
+            <div class="sidebar-item">
+                <select id="sidebarLangSelect" onchange="changeAdminLang(this.value)">
+                    <option value="ar">العربية (Arabic)</option>
+                    <option value="fr">الفرنسية (Français)</option>
+                    <option value="en">الإنجليزية (English)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 4. المظهر -->
+        <div class="sidebar-section">
+            <h4>4. المظهر والإعلانات</h4>
+            <div class="sidebar-item">
+                <label for="promoSectionLink">أ) رابط القسم الترويجي:</label>
+                <input type="text" id="promoSectionLink" placeholder="رابط القسم أو الصور..." onchange="updatePromoLink(this.value)">
+            </div>
+            <div class="sidebar-item" style="margin-top: 10px;">
+                <label for="themeSelect">ب) مظهر الموقع:</label>
+                <select id="themeSelect" onchange="changeTheme(this.value)">
+                    <option value="dark">داكن (Dark)</option>
+                    <option value="night">ليلي (Night)</option>
+                    <option value="normal">عادي (Normal)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 5. التحكم في جميع الجداول -->
+        <div class="sidebar-section">
+            <h4>5. إدارة الجداول الشاملة</h4>
+            <button onclick="openGlobalTablesModal()" style="width:100%; background:var(--gold); color:#0b1321; border:none; padding:8px; border-radius:4px; font-weight:bold; cursor:pointer;">عرض وتحكم بكل الجداول</button>
+        </div>
+    </aside>
+
+    <main class="container">
+        <h2 class="section-title">🏖️ عروض الرحلات الحالية</h2>
+
+        <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+            <h3 style="color: var(--gold); margin-top:0;">➕ إضافة رحلة جديدة</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;">
+                <div>
+                    <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">العنوان</label>
+                    <input type="text" id="newTripTitle" placeholder="مثال: عمرة رمضان" style="width:100%; padding:8px; background:#0b1321; color:#fff; border:1px solid var(--border-color); border-radius:6px; box-sizing:border-box;">
+                </div>
+                <div>
+                    <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">الفئة</label>
+                    <select id="newTripCategory" style="width:100%; padding:8px; background:#0b1321; color:#fff; border:1px solid var(--border-color); border-radius:6px; box-sizing:border-box;">
+                        <option value="hotel">🏨 حجز فندق</option>
+                        <option value="flight">✈️ حجز طيران</option>
+                        <option value="package">📦 باقة متكاملة</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">السعر</label>
+                    <input type="text" id="newTripPrice" placeholder="مثال: 45000 دج" style="width:100%; padding:8px; background:#0b1321; color:#fff; border:1px solid var(--border-color); border-radius:6px; box-sizing:border-box;">
+                </div>
+                <div>
+                    <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">تاريخ الرحلة</label>
+                    <input type="date" id="newTripDate" style="width:100%; padding:8px; background:#0b1321; color:#fff; border:1px solid var(--border-color); border-radius:6px; box-sizing:border-box;">
+                </div>
+                <div>
+                    <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">عدد المقاعد</label>
+                    <input type="number" id="newTripSeats" placeholder="مثال: 20" style="width:100%; padding:8px; background:#0b1321; color:#fff; border:1px solid var(--border-color); border-radius:6px; box-sizing:border-box;">
+                </div>
+                <div>
+                    <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">رابط الصورة</label>
+                    <input type="text" id="newTripImage" placeholder="https://..." style="width:100%; padding:8px; background:#0b1321; color:#fff; border:1px solid var(--border-color); border-radius:6px; box-sizing:border-box;">
+                </div>
+                <div style="grid-column: 1 / -1;">
+                    <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">الوصف</label>
+                    <textarea id="newTripDescription" placeholder="اكتب وصف تفصيلي للرحلة..." rows="3" style="width:100%; padding:8px; background:#0b1321; color:#fff; border:1px solid var(--border-color); border-radius:6px; box-sizing:border-box; font-family:inherit; resize:vertical;"></textarea>
+                </div>
+                <div style="grid-column: 1 / -1;">
+                    <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">المواصفات (افصل بينها بفاصلة)</label>
+                    <input type="text" id="newTripFeatures" placeholder="مثال: فطور, إقامة, نقل, تأمين" style="width:100%; padding:8px; background:#0b1321; color:#fff; border:1px solid var(--border-color); border-radius:6px; box-sizing:border-box;">
+                </div>
+            </div>
+            <button onclick="addNewTrip()" style="margin-top:15px; background:var(--gold); color:#0b1321; border:none; padding:10px 25px; border-radius:6px; font-weight:bold; cursor:pointer;">حفظ الرحلة</button>
+        </div>
+
+        <div class="cards-grid" id="tripsContainer">
+            <p>جاري تحميل العروض...</p>
+        </div>
+    </main>
+
+    <!-- نافذة تفاصيل الرحلة المخصصة -->
+    <div class="modal-overlay" id="tripModal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 id="modalTripTitle" style="color: var(--gold); margin: 0;">تفاصيل الرحلة</h2>
+                <button onclick="closeModal()" style="background:none; border:none; color:#fff; font-size:22px; cursor:pointer;">✕</button>
+            </div>
+
+            <br>
+
+            <div class="tabs-header">
+                <button class="tab-btn active" onclick="switchTab('tab1', this)">1. الأماكن المحجوزة</button>
+                <button class="tab-btn" onclick="switchTab('tab2', this)">2. الأماكن المتوفرة</button>
+                <button class="tab-btn" onclick="switchTab('tab3', this)">3. جدول المعالجة والرفض</button>
+                <button class="action-btn" onclick="openGlobalTablesModal()">📊 إدارة الجداول الشاملة</button>
+            </div>
+
+            <div id="tab1" class="tab-content active">
+                <h3>قائمة الحجوزات المؤكدة لهذه الرحلة</h3>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>الهاتف</th>
+                                <th>عدد المقاعد</th>
+                                <th>التاريخ</th>
+                                <th>إرسال وصل التأكيد</th>
+                            </tr>
+                        </thead>
+                        <tbody id="confirmedTableBody">
+                            <tr><td colspan="5">جاري التحميل...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab2" class="tab-content">
+                <h3>إدارة المقاعد والطاقة الاستيعابية</h3>
+                <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; margin-top: 15px;">
+                    <p>السعة الإجمالية: <strong id="seatsTotal" style="color:var(--gold);">0</strong> مقعد</p>
+                    <p>الأماكن المحجوزة: <strong id="seatsBooked" style="color:var(--success);">0</strong> مقعد</p>
+                    <p>الأماكن المتبقية: <strong id="seatsRemaining" style="color:var(--danger);">0</strong> مقعد</p>
+                </div>
+            </div>
+
+            <div id="tab3" class="tab-content">
+                <h3>طلبات قيد الانتظار والمعالجة</h3>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>الهاتف</th>
+                                <th>سبب عدم المعالجة</th>
+                                <th>إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pendingTableBody">
+                            <tr><td colspan="4">لا توجد طلبات معلقة</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3 style="margin-top: 35px; color: var(--danger); border-right: 4px solid var(--danger); padding-right: 8px;">الطلبات المرفوضة / الملغاة</h3>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>الهاتف</th>
+                                <th>سبب الرفض</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rejectedTableBody">
+                            <tr><td colspan="3">لا توجد طلبات مرفوضة</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة إدارة الجداول الشاملة الجديدة -->
+    <div id="all-tables-modal" class="modal">
+      <div class="modal-content modal-lg">
+        <span class="close-btn" onclick="closeAllTablesModal()">&times;</span>
+        <h2 style="color: var(--gold); margin-top: 0;">إدارة الجداول الشاملة</h2>
+
+        <!-- 1. الشاشة التمهيدية: الأزرار الأربعة -->
+        <div id="tables-navigation-menu" class="buttons-grid">
+          <button class="nav-card btn-confirmed" onclick="switchTableCategory('confirmed')">
+            <div class="card-icon">✅</div>
+            <div class="card-info">
+              <h3>الحجوزات المؤكدة</h3>
+              <p>عرض المسافرين المؤكدين وتصدير القوائم</p>
+            </div>
+          </button>
+
+          <button class="nav-card btn-pending" onclick="switchTableCategory('pending')">
+            <div class="card-icon">⏳</div>
+            <div class="card-info">
+              <h3>الحجوزات قيد الانتظار</h3>
+              <p>المعالجة السريعة، الاتصال، والتأكيد/الإلغاء</p>
+            </div>
+          </button>
+
+          <button class="nav-card btn-canceled" onclick="switchTableCategory('canceled')">
+            <div class="card-icon">❌</div>
+            <div class="card-info">
+              <h3>الحجوزات الملغاة</h3>
+              <p>تتبع الحجوزات وإحصاء أسباب الإلغاء</p>
+            </div>
+          </button>
+
+          <button class="nav-card btn-payments" onclick="switchTableCategory('payments')">
+            <div class="card-icon">💳</div>
+            <div class="card-info">
+              <h3>الدفع والمعاملات المالية</h3>
+              <p>إدارة التسبيقات، الفواتير، وإرسال الوصل عبر واتساب</p>
+            </div>
+          </button>
+        </div>
+
+        <!-- 2. شاشة عرض الجدول المنفصل -->
+        <div id="table-display-container" style="display: none;">
+          <div class="table-top-bar">
+            <button class="btn-back" onclick="returnToMenu()">&rarr; العودة للقائمة الرئيسية</button>
+            <h3 id="table-view-title" style="color: var(--gold); margin: 0;">عنوان الجدول</h3>
+            <div id="table-stats-badge" class="stats-badge"></div>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table>
+              <thead id="dynamic-table-head">
+                <!-- يتم تعبئته آلياً عبر JS -->
+              </thead>
+              <tbody id="dynamic-table-body">
+                <!-- يتم تعبئته آلياً عبر JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- نافذة منبثقة: تسجيل سبب الإلغاء -->
+    <div id="cancel-reason-modal" class="modal sub-modal">
+      <div class="modal-content" style="max-width: 450px;">
+        <span class="close-btn" onclick="closeCancelModal()">&times;</span>
+        <h3 style="color: var(--danger); margin-top:0;">تسجيل سبب إلغاء الحجز</h3>
+        <input type="hidden" id="cancel-booking-id">
+        
+        <div class="form-group">
+          <label>اختر سبب الإلغاء:</label>
+          <select id="cancel-reason-select" onchange="toggleCustomReasonInput(this.value)">
+            <option value="لم يرد على الهاتف">لم يرد على الهاتف</option>
+            <option value="السعر غير مناسب">السعر غير مناسب</option>
+            <option value="غيّر رأيه / تراجع">غيّر رأيه / تراجع</option>
+            <option value="تغيير تاريخ السفر">تغيير تاريخ السفر</option>
+            <option value="custom">سبب آخر (كتابة يدوية)...</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="custom-reason-group" style="display: none;">
+          <label>أدخل السبب بالتفصيل:</label>
+          <textarea id="cancel-reason-custom" rows="3" placeholder="اكتب السبب هنا..."></textarea>
+        </div>
+
+        <button class="btn-danger-confirm" onclick="confirmBookingCancellation()">تأكيد الإلغاء</button>
+      </div>
+    </div>
+
+    <!-- نافذة منبثقة: فورم الدفع والمعاملات المالية -->
+    <div id="payment-modal" class="modal sub-modal">
+      <div class="modal-content" style="max-width: 550px;">
+        <span class="close-btn" onclick="closePaymentModal()">&times;</span>
+        <h3 style="color: var(--gold); margin-top:0;">إدارة وتحديث بيانات الدفع</h3>
+        <form id="payment-form" onsubmit="savePaymentAndNotify(event)">
+          <input type="hidden" id="pay-booking-id">
+          <input type="hidden" id="pay-customer-phone">
+
+          <div class="form-group">
+            <label>اسم الزبون:</label>
+            <input type="text" id="pay-customer-name" readonly class="read-only-input">
+          </div>
+
+          <div class="form-group">
+            <label>الرحلة المختارة:</label>
+            <input type="text" id="pay-trip-name" readonly class="read-only-input">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label>المبلغ الإجمالي (دج):</label>
+              <input type="number" id="pay-total-amount" oninput="calculateRemainingPayment()" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label>المدفوع / التسبيق (دج):</label>
+              <input type="number" id="pay-paid-amount" oninput="calculateRemainingPayment()" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label>المبلغ المتبقي (دج):</label>
+              <input type="number" id="pay-remaining-amount" readonly class="read-only-input">
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label>حالة الدفع:</label>
+              <input type="text" id="pay-status-label" readonly class="read-only-input" style="color: var(--gold); font-weight: bold;">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>طريقة الدفع:</label>
+            <select id="pay-method" required>
+              <option value="BaridiMob">بريدي موب (BaridiMob)</option>
+              <option value="Espèce">نقداً في الوكالة (Espèce)</option>
+              <option value="CCP">تحويل بنكي / CCP</option>
+              <option value="Autre">طريقة أخرى</option>
+            </select>
+          </div>
+
+          <div class="modal-actions-grid">
+            <button type="submit" class="btn-save-pay">حفظ وتحديث الدفع</button>
+            <button type="button" class="btn-whatsapp-pay" onclick="sendWhatsAppReceipt()">
+              💬 حفظ وإرسال الوصل عبر واتساب
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- السكريبت الموحد والشامل -->
+    <script src="script.js"></script>
+    <script>
+    // 🔒 حماية اللوحة وتسجيل الدخول
+    (function checkAuth() {
+        const isAdminLoggedIn = sessionStorage.getItem("admin_logged_in");
+        if (!isAdminLoggedIn) {
+            const password = prompt("🔐 لوحة محمية - يرجى إدخال كلمة مرور الإدارة:");
+            if (password === "admin123") {
+                sessionStorage.setItem("admin_logged_in", "true");
+            } else {
+                alert("كلمة المرور خاطئة!");
+                window.location.href = "index.html";
+            }
+        }
+    })();
+
+    function logoutAdmin() {
+        sessionStorage.removeItem("admin_logged_in");
+        window.location.href = "index.html";
+    }
+
+    // دالة تنظيف النصوص لتفادي هجمات XSS
+    function escapeHTML(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>"']/g, function(m) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+        });
+    }
+
+    // تسجيل الـ Service Worker لـ PWA
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then((reg) => console.log('Service Worker registered! Scope:', reg.scope))
+                .catch((err) => console.log('Service Worker registration failed:', err));
+        });
+    }
+
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('active');
+    }
+
+    function closeModal() {
+        document.getElementById('tripModal').classList.remove('active');
+        document.body.classList.remove('modal-open');
+    }
+
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    async function loadTripCards() {
+        const container = document.getElementById('tripsContainer');
+        const sidebarConfig = document.getElementById('sidebarTripsConfig');
+
+        if (!window.supabaseClient) {
+            container.innerHTML = '<p style="color:var(--danger);">خطأ: تعذر الاتصال بـ Supabase</p>';
+            return;
+        }
+
+        const { data: trips, error } = await window.supabaseClient.from('trips').select('*').order('created_at', { ascending: false });
+        
+        if (error) {
+            container.innerHTML = `<p style="color:var(--danger);">خطأ في جلب العروض: ${escapeHTML(error.message)}</p>`;
+            return;
+        }
+
+        if (!trips || !trips.length) {
+            container.innerHTML = '<p>لا توجد عروض متاحة حالياً.</p>';
+            sidebarConfig.innerHTML = '<p style="font-size:12px; color:#a0aec0;">لا توجد رحلات</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+        sidebarConfig.innerHTML = '';
+
+        trips.forEach(trip => {
+            const card = document.createElement('div');
+            card.className = 'trip-card';
+            
+            card.innerHTML = `
+                <img src="${escapeHTML(trip.image_url) || 'https://via.placeholder.com/300'}" alt="${escapeHTML(trip.title)}" onclick="openTripModalById(${trip.id})">
+                <div class="trip-card-body" onclick="openTripModalById(${trip.id})">
+                    <div class="trip-card-title">${escapeHTML(trip.title)}</div>
+                    <div class="trip-card-info"><span data-key="admin_price_lbl">السعر:</span> ${escapeHTML(trip.price) || 'غير محدد'}</div>
+                    <div class="trip-card-info"><span data-key="admin_capacity_lbl">السعة:</span> ${trip.total_seats || 0} <span data-key="admin_seats_unit">مقعد</span></div>
+                </div>
+                <div class="trip-card-actions">
+                    <button class="btn-delete-trip" onclick="deleteTrip(${trip.id})"><span data-key="admin_btn_delete">🗑️ حذف</span></button>
+                </div>
+            `;
+            container.appendChild(card);
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'sidebar-item';
+            itemDiv.innerHTML = `
+                <label style="color:var(--gold); font-weight:bold;"><span data-key="admin_edit_trip_lbl">تعديل رحلة:</span> ${escapeHTML(trip.title)}</label>
+                <label data-key="admin_lbl_title">1) العنوان:</label>
+                <input type="text" value="${escapeHTML(trip.title) || ''}" onchange="updateTripField(${trip.id}, 'title', this.value)">
+                <label data-key="admin_lbl_price">2) السعر:</label>
+                <input type="text" value="${escapeHTML(trip.price) || ''}" onchange="updateTripField(${trip.id}, 'price', this.value)">
+                <label data-key="admin_lbl_img_url">3) رابط الصورة:</label>
+                <input type="text" value="${escapeHTML(trip.image_url) || ''}" onchange="updateTripField(${trip.id}, 'image_url', this.value)">
+            `;
+
+            sidebarConfig.appendChild(itemDiv);
+        });
+
+        window.currentTripsData = trips;
+        
+        const currentLang = localStorage.getItem('preferred_language') || 'ar';
+        if (typeof changeAdminLang === 'function') {
+            changeAdminLang(currentLang);
+        }
+    }
+
+    function openTripModalById(tripId) {
+        const trip = window.currentTripsData.find(t => t.id === tripId);
+        if (trip) openTripModal(trip);
+    }
+
+    async function updateTripField(tripId, field, value) {
+        const updateData = {};
+        updateData[field] = value;
+        const { error } = await window.supabaseClient.from('trips').update(updateData).eq('id', tripId);
+        if (!error) {
+            loadTripCards();
+        } else {
+            alert('خطأ أثناء تحديث بيانات البطاقة.');
+        }
+    }
+
+    async function deleteTrip(tripId) {
+        if (!confirm("هل أنت تأكد من رغبتك في حذف هذه الرحلة نهائياً؟")) return;
+
+        const { error } = await window.supabaseClient.from('trips').delete().eq('id', tripId);
+        if (!error) {
+            alert('تم حذف الرحلة بنجاح ✅');
+            loadTripCards();
+        } else {
+            alert('حدث خطأ أثناء الحذف: ' + error.message);
+        }
+    }
+
+    async function addNewTrip() {
+        const title = document.getElementById('newTripTitle').value.trim();
+        const category = document.getElementById('newTripCategory').value;
+        const price = document.getElementById('newTripPrice').value.trim();
+        const trip_date = document.getElementById('newTripDate').value;
+        const total_seats = document.getElementById('newTripSeats').value;
+        const image_url = document.getElementById('newTripImage').value.trim();
+        const description = document.getElementById('newTripDescription').value.trim();
+        const features = document.getElementById('newTripFeatures').value.trim();
+
+        if (!title || !total_seats) {
+            alert('الرجاء إدخال العنوان وعدد المقاعد على الأقل.');
+            return;
+        }
+
+        const { error } = await window.supabaseClient.from('trips').insert([{
+            title,
+            category,
+            price,
+            trip_date: trip_date || null,
+            total_seats: Number(total_seats),
+            image_url,
+            description,
+            features
+        }]);
+
+        if (error) {
+            alert('حدث خطأ أثناء إضافة الرحلة: ' + error.message);
+        } else {
+            alert('تمت إضافة الرحلة بنجاح ✅');
+            document.getElementById('newTripTitle').value = '';
+            document.getElementById('newTripPrice').value = '';
+            document.getElementById('newTripDate').value = '';
+            document.getElementById('newTripSeats').value = '';
+            document.getElementById('newTripImage').value = '';
+            document.getElementById('newTripDescription').value = '';
+            document.getElementById('newTripFeatures').value = '';
+            loadTripCards();
+        }
+    }
+
+    function updatePromoLink(link) {
+        localStorage.setItem('promo_section_link', link);
+    }
+
+    function changeTheme(theme) {
+        const root = document.documentElement;
+        if (theme === 'dark') {
+            root.style.setProperty('--bg-dark', '#0b1321');
+            root.style.setProperty('--card-bg', '#132238');
+        } else if (theme === 'night') {
+            root.style.setProperty('--bg-dark', '#05080f');
+            root.style.setProperty('--card-bg', '#0d1626');
+        } else {
+            root.style.setProperty('--bg-dark', '#1e293b');
+            root.style.setProperty('--card-bg', '#334155');
+        }
+        localStorage.setItem('site_theme', theme);
+    }
+
+    async function openTripModal(trip) {
+        document.getElementById('modalTripTitle').innerText = trip.title;
+        document.getElementById('seatsTotal').innerText = trip.total_seats || 0;
+        document.getElementById('tripModal').classList.add('active');
+        document.body.classList.add('modal-open');
+        await fetchTripBookings(trip);
+    }
+
+    async function fetchTripBookings(trip) {
+        const confirmedBody = document.getElementById('confirmedTableBody');
+        const pendingBody = document.getElementById('pendingTableBody');
+        const rejectedBody = document.getElementById('rejectedTableBody');
+
+        confirmedBody.innerHTML = '<tr><td colspan="5">جاري التحميل...</td></tr>';
+        pendingBody.innerHTML = '<tr><td colspan="4">جاري التحميل...</td></tr>';
+        rejectedBody.innerHTML = '<tr><td colspan="3">جاري التحميل...</td></tr>';
+
+        const { data: bookings, error } = await window.supabaseClient
+            .from('bookings')
+            .select('*')
+            .or(`trip.eq.${trip.title},trip_id.eq.${trip.id}`);
+
+        if (error || !bookings) {
+            confirmedBody.innerHTML = '<tr><td colspan="5">لا توجد بيانات</td></tr>';
+            pendingBody.innerHTML = '<tr><td colspan="4">لا توجد بيانات</td></tr>';
+            rejectedBody.innerHTML = '<tr><td colspan="3">لا توجد بيانات</td></tr>';
+            return;
+        }
+
+        const confirmedList = bookings.filter(b => b.status === 'تم التأكيد');
+        const pendingList = bookings.filter(b => b.status === 'قيد الانتظار' || !b.status);
+        const rejectedList = bookings.filter(b => b.status === 'ملغى' || b.status === 'مرفوض');
+
+        const totalBookedSeats = confirmedList.reduce((sum, b) => sum + (Number(b.people) || 1), 0);
+        document.getElementById('seatsBooked').innerText = totalBookedSeats;
+        const remaining = (trip.total_seats || 0) - totalBookedSeats;
+        document.getElementById('seatsRemaining').innerText = remaining >= 0 ? remaining : 0;
+
+        confirmedBody.innerHTML = confirmedList.length === 0 ? '<tr><td colspan="5">لا توجد حجوزات مؤكدة</td></tr>' : '';
+        confirmedList.forEach(b => {
+            const cleanPhone = b.phone ? b.phone.replace(/\D/g, '') : '';
+            const invoiceText = encodeURIComponent(`🌟 VERISON TRAVEL - وصل تأكيد حجز 🌟\n\nأهلاً بك ${b.name || ''},\nتم تأكيد حجزك في رحلة: ${trip.title}`);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${escapeHTML(b.name) || '-'}</td><td>${escapeHTML(b.phone) || '-'}</td><td>${b.people || 1}</td><td>${escapeHTML(b.date) || '-'}</td><td>${cleanPhone ? `<a href="https://wa.me/${cleanPhone}?text=${invoiceText}" target="_blank" rel="noopener noreferrer" class="btn-whatsapp">💬 إرسال الوصل</a>` : '-'}</td>`;
+            confirmedBody.appendChild(tr);
+        });
+
+        pendingBody.innerHTML = pendingList.length === 0 ? '<tr><td colspan="4">لا توجد طلبات معلقة</td></tr>' : '';
+        pendingList.forEach(b => {
+            const cleanPhone = b.phone ? b.phone.replace(/\D/g, '') : '';
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${escapeHTML(b.name) || '-'}</td><td>${escapeHTML(b.phone) || '-'}</td><td><input type="text" value="${escapeHTML(b.processing_reason) || ''}" onchange="updateReason(${b.id}, this.value)" style="background:#0b1321; color:#fff; border:1px solid #d4af37; padding:5px; border-radius:4px; width:90%;"></td><td>${cleanPhone ? `<a href="https://wa.me/${cleanPhone}" target="_blank" rel="noopener noreferrer" class="btn-whatsapp">💬 مراسلة</a>` : '-'}</td>`;
+            pendingBody.appendChild(tr);
+        });
+
+        rejectedBody.innerHTML = rejectedList.length === 0 ? '<tr><td colspan="3">لا توجد طلبات مرفوضة</td></tr>' : '';
+        rejectedList.forEach(b => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${escapeHTML(b.name) || '-'}</td><td>${escapeHTML(b.phone) || '-'}</td><td><input type="text" value="${escapeHTML(b.processing_reason) || ''}" onchange="updateReason(${b.id}, this.value)" style="background:#0b1321; color:#fff; border:1px solid #e74c3c; padding:5px; border-radius:4px; width:90%;"></td>`;
+            rejectedBody.appendChild(tr);
+        });
+    }
+
+    async function updateReason(bookingId, reason) {
+        await window.supabaseClient.from('bookings').update({ processing_reason: reason }).eq('id', bookingId);
+    }
+
+    async function loadAdminBookingCards() {
+        const container = document.getElementById('bookingCardsAdminConfig');
+        if (!container) return;
+
+        if (!window.supabaseClient) {
+            container.innerHTML = '<p style="font-size:12px; color:var(--danger);">خطأ: لم يتم الاتصال بـ Supabase بعد</p>';
+            return;
+        }
+
+        const { data: cards, error } = await window.supabaseClient
+            .from('booking_cards')
+            .select('*')
+            .order('id', { ascending: true });
+
+        if (error) {
+            container.innerHTML = `<p style="font-size:12px; color:var(--danger);">خطأ: ${escapeHTML(error.message)}</p>`;
+            return;
+        }
+
+        if (!cards || cards.length === 0) {
+            container.innerHTML = '<p style="font-size:12px; color:#a0aec0;">لا توجد بطاقات مسجلة.</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+        cards.forEach(card => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'sidebar-item';
+            itemDiv.style.marginBottom = '12px';
+            itemDiv.style.borderRight = '2px solid var(--gold)';
+            itemDiv.innerHTML = `
+                <label style="color:var(--gold); font-weight:bold;">بطاقة: ${escapeHTML(card.title_ar) || card.card_key}</label>
+                <label>الأيقونة:</label>
+                <input type="text" id="bcard_icon_${card.id}" value="${escapeHTML(card.icon_class) || ''}">
+                <label>العنوان:</label>
+                <input type="text" id="bcard_title_${card.id}" value="${escapeHTML(card.title_ar) || ''}">
+                <label>الوصف:</label>
+                <input type="text" id="bcard_desc_${card.id}" value="${escapeHTML(card.description_ar) || ''}">
+                <button onclick="saveBookingCardChange(${card.id})" style="margin-top:5px; width:100%; background:var(--gold); color:#0b1321; border:none; padding:5px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px;">حفظ التغييرات</button>
+            `;
+            container.appendChild(itemDiv);
+        });
+    }
+
+    async function saveBookingCardChange(cardId) {
+        const iconVal = document.getElementById(`bcard_icon_${cardId}`).value.trim();
+        const titleVal = document.getElementById(`bcard_title_${cardId}`).value.trim();
+        const descVal = document.getElementById(`bcard_desc_${cardId}`).value.trim();
+
+        const { error } = await window.supabaseClient
+            .from('booking_cards')
+            .update({
+                icon_class: iconVal,
+                title_ar: titleVal,
+                description_ar: descVal
+            })
+            .eq('id', cardId);
+
+        if (error) {
+            alert('حدث خطأ أثناء حفظ البيانات: ' + error.message);
+        } else {
+            alert('تم تحديث البطاقة بنجاح ✅');
+        }
+    }
+
+    // 🌐 قاموس الترجمة ونظام اللغات الموحد
+    const adminTranslations = {
+        ar: {
+            admin_title: "VERISON TRAVEL - لوحة الإدارة",
+            admin_dashboard: "⚙️ لوحة التحكم والإعدادات",
+            admin_trips: "1. إعدادات البطاقات والعروض",
+            admin_bookings: "إدارة الحجوزات",
+            admin_add_trip: "إضافة رحلة جديدة",
+            admin_users: "المستخدمين",
+            admin_settings: "الإعدادات",
+            admin_logout: "تسجيل الخروج",
+            admin_total_bookings: "إجمالي الحجوزات",
+            admin_pending_bookings: "حجوزات قيد الانتظار",
+            admin_confirmed_bookings: "حجوزات مؤكدة",
+            admin_cancelled_bookings: "حجوزات ملغاة",
+            admin_th_id: "#",
+            admin_th_name: "الاسم",
+            admin_th_phone: "الهاتف",
+            admin_th_trip: "الرحلة",
+            admin_th_date: "التاريخ",
+            admin_th_people: "العدد",
+            admin_th_status: "الحالة",
+            admin_th_actions: "الإجراءات",
+            admin_btn_confirm: "تأكيد",
+            admin_btn_cancel: "إلغاء",
+            admin_btn_delete: "حذف",
+            admin_btn_edit: "تعديل",
+            admin_status_pending: "قيد الانتظار",
+            admin_status_confirmed: "مؤكد",
+            admin_status_cancelled: "ملغى"
+        },
+        fr: {
+            admin_title: "VERISON TRAVEL - Panneau d'Administration",
+            admin_dashboard: "⚙️ Tableau de bord et paramètres",
+            admin_trips: "1. Paramètres des cartes et offres",
+            admin_bookings: "Gestion des Réservations",
+            admin_add_trip: "Ajouter un Voyage",
+            admin_users: "Utilisateurs",
+            admin_settings: "Paramètres",
+            admin_logout: "Déconnexion",
+            admin_total_bookings: "Total Réservations",
+            admin_pending_bookings: "En Attente",
+            admin_confirmed_bookings: "Confirmées",
+            admin_cancelled_bookings: "Annulées",
+            admin_th_id: "#",
+            admin_th_name: "Nom",
+            admin_th_phone: "Téléphone",
+            admin_th_trip: "Voyage",
+            admin_th_date: "Date",
+            admin_th_people: "Personnes",
+            admin_th_status: "Statut",
+            admin_th_actions: "Actions",
+            admin_btn_confirm: "Confirmer",
+            admin_btn_cancel: "Annuler",
+            admin_btn_delete: "Supprimer",
+            admin_btn_edit: "Modifier",
+            admin_status_pending: "En attente",
+            admin_status_confirmed: "Confirmé",
+            admin_status_cancelled: "Annulé"
+        },
+        en: {
+            admin_title: "VERISON TRAVEL - Admin Dashboard",
+            admin_dashboard: "⚙️ Dashboard & Settings",
+            admin_trips: "1. Cards & Offers Settings",
+            admin_bookings: "Bookings Management",
+            admin_add_trip: "Add New Trip",
+            admin_users: "Users",
+            admin_settings: "Settings",
+            admin_logout: "Logout",
+            admin_total_bookings: "Total Bookings",
+            admin_pending_bookings: "Pending Bookings",
+            admin_confirmed_bookings: "Confirmed Bookings",
+            admin_cancelled_bookings: "Cancelled Bookings",
+            admin_th_id: "#",
+            admin_th_name: "Name",
+            admin_th_phone: "Phone",
+            admin_th_trip: "Trip",
+            admin_th_date: "Date",
+            admin_th_people: "People",
+            admin_th_status: "Status",
+            admin_th_actions: "Actions",
+            admin_btn_confirm: "Confirm",
+            admin_btn_cancel: "Cancel",
+            admin_btn_delete: "Delete",
+            admin_btn_edit: "Edit",
+            admin_status_pending: "Pending",
+            admin_status_confirmed: "Confirmed",
+            admin_status_cancelled: "Cancelled"
+        }
+    };
+
+    function changeAdminLang(lang) {
+        if (!adminTranslations[lang]) return;
+
+        const elements = document.querySelectorAll("[data-key]");
+        elements.forEach(function(el) {
+            const key = el.getAttribute("data-key");
+            if (adminTranslations[lang] && adminTranslations[lang][key]) {
+                el.textContent = adminTranslations[lang][key];
+            }
+        });
+
+        document.querySelectorAll("table th, table td, .status-badge").forEach(function(el) {
+            const txt = el.textContent.trim();
+            if (lang === "fr") {
+                if (txt === "قيد الانتظار" || txt === "Pending") el.textContent = adminTranslations.fr.admin_status_pending;
+                if (txt === "تم التأكيد" || txt === "مؤكد" || txt === "Confirmed") el.textContent = adminTranslations.fr.admin_status_confirmed;
+                if (txt === "ملغى" || txt === "مرفوض" || txt === "Cancelled") el.textContent = adminTranslations.fr.admin_status_cancelled;
+            } else if (lang === "en") {
+                if (txt === "قيد الانتظار" || txt === "En attente") el.textContent = adminTranslations.en.admin_status_pending;
+                if (txt === "تم التأكيد" || txt === "مؤكد" || txt === "Confirmé") el.textContent = adminTranslations.en.admin_status_confirmed;
+                if (txt === "ملغى" || txt === "مرفوض" || txt === "Annulé") el.textContent = adminTranslations.en.admin_status_cancelled;
+            } else if (lang === "ar") {
+                if (txt === "En attente" || txt === "Pending") el.textContent = adminTranslations.ar.admin_status_pending;
+                if (txt === "Confirmé" || txt === "Confirmed") el.textContent = adminTranslations.ar.admin_status_confirmed;
+                if (txt === "Annulé" || txt === "Cancelled") el.textContent = adminTranslations.ar.admin_status_cancelled;
+            }
+        });
+
+        document.documentElement.lang = lang;
+        document.documentElement.dir = (lang === "ar") ? "rtl" : "ltr";
+        localStorage.setItem("preferred_language", lang);
+
+        const sidebarSelect = document.getElementById("sidebarLangSelect");
+        if (sidebarSelect) sidebarSelect.value = lang;
+
+        const langBtn = document.getElementById("adminLangBtn");
+        if (langBtn) langBtn.textContent = lang.toUpperCase();
+    }
+
+    function toggleAdminLanguage() {
+        const currentLang = localStorage.getItem("preferred_language") || "ar";
+        let nextLang = 'ar';
+        if (currentLang === 'ar') nextLang = 'fr';
+        else if (currentLang === 'fr') nextLang = 'en';
+        else nextLang = 'ar';
+        changeAdminLang(nextLang);
+    }
+
+    // ==========================================
+    // ⚡ دوال إدارة الجداول الشاملة المربوطة بـ Supabase
+    // ==========================================
+    let allBookingsData = [];
+
+    function openGlobalTablesModal() {
+        document.getElementById('all-tables-modal').classList.add('active');
+        document.body.classList.add('modal-open');
+        returnToMenu();
+        loadAllBookings();
+    }
+
+    function closeAllTablesModal() {
+        document.getElementById('all-tables-modal').classList.remove('active');
+        document.body.classList.remove('modal-open');
+    }
+
+    function returnToMenu() {
+        document.getElementById('tables-navigation-menu').style.display = 'grid';
+        document.getElementById('table-display-container').style.display = 'none';
+    }
+
+    async function loadAllBookings() {
+        if (!window.supabaseClient) return;
+        const { data, error } = await window.supabaseClient
+            .from('bookings')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (!error && data) {
+            allBookingsData = data;
+        }
+    }
+
+    function switchTableCategory(category) {
+        document.getElementById('tables-navigation-menu').style.display = 'none';
+        document.getElementById('table-display-container').style.display = 'block';
+
+        const thead = document.getElementById('dynamic-table-head');
+        const tbody = document.getElementById('dynamic-table-body');
+        const title = document.getElementById('table-view-title');
+
+        tbody.innerHTML = '';
+
+        if (category === 'confirmed') {
+            title.innerText = '✅ الحجوزات المؤكدة';
+            thead.innerHTML = `<tr><th>الاسم</th><th>الهاتف</th><th>الرحلة</th><th>المقاعد</th><th>الإجراء</th></tr>`;
+            const list = allBookingsData.filter(b => b.status === 'تم التأكيد');
+            list.forEach(b => {
+                const cleanPhone = b.phone ? b.phone.replace(/\D/g, '') : '';
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${escapeHTML(b.name || '')}</td>
+                        <td>${escapeHTML(b.phone || '')}</td>
+                        <td>${escapeHTML(b.trip || b.trip_id || '')}</td>
+                        <td>${b.people || 1}</td>
+                        <td>
+                            <button class="btn-whatsapp" onclick="window.open('https://wa.me/${cleanPhone}', '_blank')">💬 واتساب</button>
+                        </td>
+                    </tr>`;
+            });
+            if (list.length === 0) tbody.innerHTML = '<tr><td colspan="5">لا توجد حجوزات مؤكدة</td></tr>';
+
+        } else if (category === 'pending') {
+            title.innerText = '⏳ الحجوزات قيد الانتظار';
+            thead.innerHTML = `<tr><th>الاسم</th><th>الهاتف</th><th>الرحلة</th><th>التحكم</th></tr>`;
+            const list = allBookingsData.filter(b => b.status === 'قيد الانتظار' || !b.status);
+            list.forEach(b => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${escapeHTML(b.name || '')}</td>
+                        <td>${escapeHTML(b.phone || '')}</td>
+                        <td>${escapeHTML(b.trip || b.trip_id || '')}</td>
+                        <td>
+                            <button onclick="confirmBookingStatus(${b.id})" style="background:var(--success); color:#fff; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">تأكيد</button>
+                            <button onclick="openCancelModal(${b.id})" style="background:var(--danger); color:#fff; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">إلغاء</button>
+                        </td>
+                    </tr>`;
+            });
+            if (list.length === 0) tbody.innerHTML = '<tr><td colspan="4">لا توجد حجوزات قيد الانتظار</td></tr>';
+
+        } else if (category === 'canceled') {
+            title.innerText = '❌ الحجوزات الملغاة';
+            thead.innerHTML = `<tr><th>الاسم</th><th>الهاتف</th><th>الرحلة</th><th>سبب الإلغاء</th></tr>`;
+            const list = allBookingsData.filter(b => b.status === 'ملغى' || b.status === 'مرفوض');
+            list.forEach(b => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${escapeHTML(b.name || '')}</td>
+                        <td>${escapeHTML(b.phone || '')}</td>
+                        <td>${escapeHTML(b.trip || b.trip_id || '')}</td>
+                        <td>${escapeHTML(b.processing_reason || 'غير محدد')}</td>
+                    </tr>`;
+            });
+            if (list.length === 0) tbody.innerHTML = '<tr><td colspan="4">لا توجد حجوزات ملغاة</td></tr>';
+
+        } else if (category === 'payments') {
+            title.innerText = '💳 إدارة المعاملات المالية';
+            thead.innerHTML = `<tr><th>الاسم</th><th>المبلغ الكلي</th><th>المدفوع</th><th>المتبقي</th><th>تحديث</th></tr>`;
+            allBookingsData.forEach(b => {
+                const total = b.total_price || 0;
+                const paid = b.paid_price || 0;
+                const remaining = total - paid;
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${escapeHTML(b.name || '')}</td>
+                        <td>${total} دج</td>
+                        <td>${paid} دج</td>
+                        <td>${remaining} دج</td>
+                        <td>
+                            <button onclick="openPaymentModal(${b.id})" style="background:var(--gold); color:#0b1321; border:none; padding:4px 8px; border-radius:4px; font-weight:bold; cursor:pointer;">إدارة الدفع</button>
+                        </td>
+                    </tr>`;
+            });
+            if (allBookingsData.length === 0) tbody.innerHTML = '<tr><td colspan="5">لا توجد بيانات مالية</td></tr>';
+        }
+    }
+
+    async function confirmBookingStatus(id) {
+        const { error } = await window.supabaseClient.from('bookings').update({ status: 'تم التأكيد' }).eq('id', id);
+        if (!error) {
+            alert('تم تأكيد الحجز بنجاح ✅');
+            await loadAllBookings();
+            switchTableCategory('pending');
+        }
+    }
+
+    function openCancelModal(id) {
+        document.getElementById('cancel-booking-id').value = id;
+        document.getElementById('cancel-reason-modal').classList.add('active');
+    }
+
+    function closeCancelModal() {
+        document.getElementById('cancel-reason-modal').classList.remove('active');
+    }
+
+    function toggleCustomReasonInput(val) {
+        document.getElementById('custom-reason-group').style.display = (val === 'custom') ? 'block' : 'none';
+    }
+
+    async function confirmBookingCancellation() {
+        const id = document.getElementById('cancel-booking-id').value;
+        const selectVal = document.getElementById('cancel-reason-select').value;
+        const customVal = document.getElementById('cancel-reason-custom').value;
+        const finalReason = selectVal === 'custom' ? customVal : selectVal;
+
+        const { error } = await window.supabaseClient.from('bookings').update({
+            status: 'ملغى',
+            processing_reason: finalReason
+        }).eq('id', id);
+
+        if (!error) {
+            alert('تم إلغاء الحجز وتسجيل السبب بنجاح.');
+            closeCancelModal();
+            await loadAllBookings();
+            switchTableCategory('pending');
+        }
+    }
+
+    function openPaymentModal(id) {
+        const booking = allBookingsData.find(b => b.id === id);
+        if (!booking) return;
+
+        document.getElementById('pay-booking-id').value = booking.id;
+        document.getElementById('pay-customer-phone').value = booking.phone || '';
+        document.getElementById('pay-customer-name').value = booking.name || '';
+        document.getElementById('pay-trip-name').value = booking.trip || booking.trip_id || '';
+        document.getElementById('pay-total-amount').value = booking.total_price || 0;
+        document.getElementById('pay-paid-amount').value = booking.paid_price || 0;
+        
+        calculateRemainingPayment();
+        document.getElementById('payment-modal').classList.add('active');
+    }
+
+    function closePaymentModal() {
+        document.getElementById('payment-modal').classList.remove('active');
+    }
+
+    function calculateRemainingPayment() {
+        const total = Number(document.getElementById('pay-total-amount').value) || 0;
+        const paid = Number(document.getElementById('pay-paid-amount').value) || 0;
+        const remaining = total - paid;
+        
+        document.getElementById('pay-remaining-amount').value = remaining >= 0 ? remaining : 0;
+        
+        let status = 'غير مدفوع';
+        if (paid >= total && total > 0) status = 'مدفوع بالكامل ✅';
+        else if (paid > 0) status = 'دفعة جزئية (تسبيق) ⏳';
+        
+        document.getElementById('pay-status-label').value = status;
+    }
+
+    async function savePaymentAndNotify(e) {
+        if(e) e.preventDefault();
+        const id = document.getElementById('pay-booking-id').value;
+        const total = Number(document.getElementById('pay-total-amount').value);
+        const paid = Number(document.getElementById('pay-paid-amount').value);
+        const method = document.getElementById('pay-method').value;
+
+        const { error } = await window.supabaseClient.from('bookings').update({
+            total_price: total,
+            paid_price: paid,
+            payment_method: method
+        }).eq('id', id);
+
+        if (!error) {
+            alert('تم حفظ كافة البيانات المالية بنجاح ✅');
+            closePaymentModal();
+            await loadAllBookings();
+            switchTableCategory('payments');
+        }
+    }
+
+    function sendWhatsAppReceipt() {
+        const name = document.getElementById('pay-customer-name').value;
+        const phone = document.getElementById('pay-customer-phone').value.replace(/\D/g, '');
+        const trip = document.getElementById('pay-trip-name').value;
+        const paid = document.getElementById('pay-paid-amount').value;
+        const remaining = document.getElementById('pay-remaining-amount').value;
+
+        const message = encodeURIComponent(`🧾 *وصل استلام - VERISON TRAVEL*\n\nعزيزي/تي: ${name}\nرحلة: ${trip}\nالمبلغ المدفوع: ${paid} دج\nالمبلغ المتبقي: ${remaining} دج\n\nشكراً لاختياركم وكالتنا! ✨`);
+        window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+    }
+
+    // تهيئة الصفحة عند التحميل
+    document.addEventListener("DOMContentLoaded", function() {
+        const savedTheme = localStorage.getItem('site_theme') || 'dark';
+        changeTheme(savedTheme);
+        const themeSelect = document.getElementById('themeSelect');
+        if (themeSelect) themeSelect.value = savedTheme;
+
+        const savedLang = localStorage.getItem("preferred_language") || "ar";
+        changeAdminLang(savedLang);
+
+        setTimeout(() => {
+            if (typeof loadTripCards === 'function') loadTripCards();
+            loadAdminBookingCards();
+        }, 300);
+
+        const sidebarContainer = document.getElementById('sidebarTripsConfig');
+        if (sidebarContainer) {
+            const observer = new MutationObserver(function() {
+                const currentLang = localStorage.getItem("preferred_language") || "ar";
+                changeAdminLang(currentLang);
+            });
+            observer.observe(sidebarContainer, { childList: true, subtree: true });
+        }
+    });
+    </script>
+</body>
+</html>
